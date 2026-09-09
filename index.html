@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مخطط أسبقيات المقررات — فرع الهندسة المعلوماتية (ITE)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.rtl.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===================== Header ===================== -->
+<header class="hero">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-8">
+        <div class="eyebrow">فرع الهندسة المعلوماتية — ITE</div>
+        <h1>مخطط أسبقيات المقررات</h1>
+        <p class="lead">
+          خريطة تفاعلية لجميع المقررات الأساسية ومسارات التخصص الستة، مع إظهار سلسلة
+          المتطلبات السابقة لكل مقرر عند المرور عليه بالمؤشر. اضغط أي بطاقة للاطلاع
+          على تفاصيلها الكاملة.
+        </p>
+      </div>
+      <div class="col-lg-4">
+        <div class="plate">
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-secondary" style="color:var(--text-2)!important">الحد الأدنى من النقاط للترفيع</span>
+          </div>
+          <table class="table table-sm table-borderless mb-0" style="color:var(--text-1)">
+            <tbody id="threshold-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== Toolbar ===================== -->
+<div class="toolbar">
+  <div class="container">
+    <div class="row g-2 align-items-center">
+      <div class="col-12 col-md-4">
+        <select id="trackFilter" class="form-select" aria-label="تصفية حسب المسار">
+          <option value="all">جميع المقررات (الأساسية + كل المسارات)</option>
+          <option value="foundation">المقررات الأساسية والعامة فقط</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-4">
+        <input id="searchBox" type="search" class="form-control" placeholder="ابحث باسم المقرر أو رمزه… مثال: الذكاء الصنعي أو BAI501">
+      </div>
+      <div class="col-12 col-md-4 d-flex justify-content-md-end">
+        <div id="resultCount" class="pill">— نتيجة</div>
+      </div>
+    </div>
+    <div class="legend mt-3" id="legend"></div>
+  </div>
+</div>
+
+<!-- ===================== Main ===================== -->
+<main class="container pb-5">
+
+  <!-- إحصائيات -->
+  <div class="row g-3 mt-1" id="statsRow"></div>
+
+  <!-- الأقسام والبطاقات -->
+  <div id="sectionsWrap"></div>
+
+  <div id="emptyState" class="empty-state d-none">
+    <i class="bi bi-search fs-3 d-block mb-2"></i>
+    لا توجد مقررات مطابقة لبحثك. جرّب كلمة أخرى أو أعد ضبط التصفية.
+  </div>
+
+  <!-- ملاحظات المخطط الأصلي -->
+  <div class="mt-5">
+    <div class="section-title">
+      <span class="bar" style="background:var(--accent)"></span>
+      <h2>ملاحظات هامة من المخطط الرسمي</h2>
+    </div>
+    <div class="accordion notes-card" id="notesAccordion">
+      <div class="accordion-item" style="background:transparent;border:none">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#notesBody">
+            اضغط لعرض / إخفاء الملاحظات
+          </button>
+        </h2>
+        <div id="notesBody" class="accordion-collapse collapse" data-bs-parent="#notesAccordion">
+          <div class="accordion-body">
+            <ul id="notesList"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container d-flex flex-wrap justify-content-between gap-2">
+    <span>مُعدّة اعتمادًا على مخطط الأسبقيات الرسمي لفرع الهندسة المعلوماتية (ITE).</span>
+    <span>بعض أسهم الأسبقية في المخطط الأصلي كثيفة ومتشابكة — إن لاحظت خطأ في مقرر معيّن أعلمني به لتصحيحه.</span>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="data.js"></script>
+<script>
+/* ============================================================
+   منطق الصفحة الرئيسية
+   ============================================================ */
+const sectionsWrap = document.getElementById('sectionsWrap');
+const emptyState   = document.getElementById('emptyState');
+const trackFilter  = document.getElementById('trackFilter');
+const searchBox    = document.getElementById('searchBox');
+const resultCount  = document.getElementById('resultCount');
+const legendEl     = document.getElementById('legend');
+const statsRow     = document.getElementById('statsRow');
+
+// تعبئة قائمة المسارات
+const trackGroups = {};
+TRACKS.forEach(t => { (trackGroups[t.group] ||= []).push(t); });
+Object.entries(trackGroups).forEach(([group, list]) => {
+  const og = document.createElement('optgroup');
+  og.label = group;
+  list.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = t.label;
+    og.appendChild(opt);
+  });
+  trackFilter.appendChild(og);
+});
+
+// جدول الحد الأدنى من النقاط
+document.getElementById('threshold-table').innerHTML = CREDIT_THRESHOLDS.map(r => `
+  <tr><td>السنة ${r.year}</td><td class="text-end mono" style="color:var(--accent)">${r.min} نقطة</td></tr>
+`).join('');
+
+// الملاحظات
+document.getElementById('notesList').innerHTML = NOTES.map(n => `<li>${n}</li>`).join('');
+
+// الأسطورة اللونية (Legend) — تُبنى حسب القسم الظاهر حاليًا
+function trackColor(id){ return (TRACKS.find(t => t.id === id) || {}).color; }
+
+function currentFilterPredicate(){
+  const val = trackFilter.value;
+  return (course) => {
+    if (val === 'all') return true;
+    if (val === 'foundation') return course.tracks.length === 0;
+    return course.tracks.length === 0 || course.tracks.includes(val);
+  };
+}
+
+function buildLegend(activeCategories){
+  legendEl.innerHTML = activeCategories.map(catId => {
+    const cat = CATEGORIES[catId];
+    return `<span class="chip"><span class="dot" style="background:${cat.color}"></span>${cat.label}</span>`;
+  }).join('');
+}
+
+function courseMatchesSearch(course, q){
+  if (!q) return true;
+  q = q.trim().toLowerCase();
+  return course.name.toLowerCase().includes(q) || course.code.toLowerCase().includes(q);
+}
+
+function render(){
+  const predicate = currentFilterPredicate();
+  const q = searchBox.value;
+  const visible = COURSES.filter(c => predicate(c) && courseMatchesSearch(c, q));
+
+  resultCount.innerHTML = `<i class="bi bi-collection me-1"></i> ${visible.length} مقرر`;
+
+  // تجميع حسب القسم بالترتيب المحدد مسبقًا
+  const byCat = {};
+  visible.forEach(c => (byCat[c.category] ||= []).push(c));
+
+  const activeSections = SECTION_ORDER.filter(catId => byCat[catId] && byCat[catId].length);
+  buildLegend(activeSections);
+
+  if (!visible.length){
+    sectionsWrap.innerHTML = '';
+    emptyState.classList.remove('d-none');
+    renderStats([]);
+    return;
+  }
+  emptyState.classList.add('d-none');
+
+  sectionsWrap.innerHTML = activeSections.map(catId => {
+    const cat = CATEGORIES[catId];
+    const isTrack = catId.startsWith('track-');
+    const cards = byCat[catId].map(c => courseCardHTML(c)).join('');
+    return `
+      <section>
+        <div class="section-title">
+          <span class="bar" style="background:${cat.color}"></span>
+          <h2>${cat.label}</h2>
+          <span class="count">(${byCat[catId].length})</span>
+        </div>
+        <div class="${isTrack ? 'track-band' : ''}">
+          <div class="course-grid" data-cat="${catId}">${cards}</div>
+        </div>
+      </section>`;
+  }).join('');
+
+  bindCardEvents();
+  renderStats(visible);
+}
+
+function courseCardHTML(c){
+  const cat = CATEGORIES[c.category];
+  const prereqTags = c.prereq.length
+    ? c.prereq.map(p => `<span class="tag">${p}</span>`).join('')
+    : `<span style="color:var(--text-2)">لا يوجد متطلب سابق</span>`;
+  const trackDots = c.tracks.map(t => `<i style="background:${trackColor(t)}" title="${(TRACKS.find(x=>x.id===t)||{}).label||''}"></i>`).join('');
+
+  return `
+    <a class="course-card" href="course.html?code=${encodeURIComponent(c.code)}" target="_blank" rel="noopener"
+       data-code="${c.code}" style="--cat:${cat.color}">
+      ${trackDots ? `<span class="track-dots">${trackDots}</span>` : ''}
+      <div class="top-row">
+        <span class="code mono">${c.code}</span>
+        <span class="credits mono">${c.credits} نقطة</span>
+      </div>
+      <div class="name">${c.name}</div>
+      <div class="prereq-row">${prereqTags}</div>
+    </a>`;
+}
+
+function renderStats(visible){
+  const total = visible.reduce((s,c) => s + c.credits, 0);
+  const withPrereq = visible.filter(c => c.prereq.length).length;
+  const noPrereq = visible.length - withPrereq;
+  const tracksTouched = new Set(visible.flatMap(c => c.tracks)).size;
+
+  statsRow.innerHTML = [
+    { num: visible.length, label:'مقرر ظاهر حاليًا' },
+    { num: total, label:'مجموع نقاط الاعتماد' },
+    { num: noPrereq, label:'مقرر بلا متطلب سابق' },
+    { num: tracksTouched, label:'مسار تخصص ظاهر' },
+  ].map(s => `
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="num mono">${s.num}</div>
+        <div class="label">${s.label}</div>
+      </div>
+    </div>`).join('');
+}
+
+/* ---------- تأثير المرور: إبراز المتطلبات السابقة/اللاحقة ---------- */
+function bindCardEvents(){
+  document.querySelectorAll('.course-grid').forEach(grid => {
+    grid.querySelectorAll('.course-card').forEach(card => {
+      card.addEventListener('mouseenter', () => highlight(card.dataset.code));
+      card.addEventListener('focus', () => highlight(card.dataset.code));
+      card.addEventListener('mouseleave', clearHighlight);
+      card.addEventListener('blur', clearHighlight);
+    });
+  });
+}
+
+function allVisibleCards(){
+  return document.querySelectorAll('.course-card');
+}
+
+function highlight(code){
+  const ancestors = getAncestors(code);
+  const dependents = new Set((COURSE_MAP[code] || {}).dependents || []);
+
+  document.querySelectorAll('.course-grid').forEach(g => g.classList.add('hovering'));
+  allVisibleCards().forEach(card => {
+    const c = card.dataset.code;
+    card.classList.remove('hl-self','hl-prereq','hl-dependent');
+    if (c === code) card.classList.add('hl-self');
+    else if (ancestors.has(c)) card.classList.add('hl-prereq');
+    else if (dependents.has(c)) card.classList.add('hl-dependent');
+  });
+}
+
+function clearHighlight(){
+  document.querySelectorAll('.course-grid').forEach(g => g.classList.remove('hovering'));
+  allVisibleCards().forEach(card => card.classList.remove('hl-self','hl-prereq','hl-dependent'));
+}
+
+trackFilter.addEventListener('change', render);
+searchBox.addEventListener('input', render);
+
+render();
+</script>
+</body>
+</html>

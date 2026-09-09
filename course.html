@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تفاصيل المقرر — مخطط أسبقيات المقررات (ITE)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.rtl.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="toolbar" style="position:static">
+  <div class="container d-flex justify-content-between align-items-center">
+    <a href="index.html" class="btn btn-outline-blueprint btn-sm">
+      <i class="bi bi-arrow-right me-1"></i> رجوع إلى المخطط الكامل
+    </a>
+    <span class="pill"><i class="bi bi-diagram-3 me-1"></i> فرع الهندسة المعلوماتية — ITE</span>
+  </div>
+</div>
+
+<main class="container py-4" id="app"></main>
+
+<footer class="site-footer">
+  <div class="container">
+    <span>مُعدّة اعتمادًا على مخطط الأسبقيات الرسمي لفرع الهندسة المعلوماتية (ITE).</span>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const code = params.get('code');
+const app = document.getElementById('app');
+const course = COURSE_MAP[code];
+
+function trackBadge(id){
+  const t = TRACKS.find(x => x.id === id);
+  if (!t) return '';
+  return `<span class="pill" style="border-inline-start:3px solid ${t.color}">${t.label}</span>`;
+}
+
+function relList(codes, emptyText){
+  if (!codes.length) return `<div class="rel-empty">${emptyText}</div>`;
+  return `<ul class="rel-list">${codes.map(cd => {
+    const cc = COURSE_MAP[cd];
+    if (!cc) return '';
+    const cat = CATEGORIES[cc.category];
+    return `<a href="course.html?code=${encodeURIComponent(cd)}" style="--accent:${cat.color}">
+        <span>${cc.name}</span>
+        <span class="rel-code mono">${cd} · ${cc.credits} نقطة</span>
+      </a>`;
+  }).join('')}</ul>`;
+}
+
+if (!course){
+  app.innerHTML = `
+    <div class="empty-state">
+      <i class="bi bi-exclamation-triangle fs-3 d-block mb-2"></i>
+      لم يتم العثور على مقرر بهذا الرمز.
+      <div class="mt-3"><a href="index.html" class="btn btn-blueprint btn-sm">العودة إلى المخطط</a></div>
+    </div>`;
+} else {
+  const cat = CATEGORIES[course.category];
+  document.title = `${course.name} (${course.code}) — تفاصيل المقرر`;
+
+  app.innerHTML = `
+    <div class="detail-hero" style="--cat:${cat.color}">
+      <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+          <div class="code-badge mono mb-1">${course.code}</div>
+          <h1 class="h3 fw-bold mb-2">${course.name}</h1>
+          <div class="d-flex flex-wrap gap-2">
+            <span class="pill"><i class="bi bi-award me-1"></i> ${course.credits} نقطة اعتماد</span>
+            <span class="pill" style="border-inline-start:3px solid ${cat.color}">${cat.label}</span>
+            ${course.tracks.map(trackBadge).join('')}
+          </div>
+        </div>
+      </div>
+      <p class="mt-3 mb-0" style="color:var(--text-1)">${DESC_TEMPLATES[course.category] || ''}</p>
+    </div>
+
+    <div class="row g-4 mt-1">
+      <div class="col-md-6">
+        <div class="section-title mt-0">
+          <span class="bar" style="background:#F4B740"></span>
+          <h2>المتطلبات السابقة المباشرة</h2>
+        </div>
+        ${relList(course.prereq, 'لا يوجد متطلب سابق — يمكن تنزيل هذا المقرر مباشرة.')}
+      </div>
+      <div class="col-md-6">
+        <div class="section-title mt-0">
+          <span class="bar" style="background:#4CAF7D"></span>
+          <h2>مقررات تعتمد على هذا المقرر</h2>
+        </div>
+        ${relList(course.dependents, 'لا توجد مقررات تشترط هذا المقرر كمتطلب سابق حتى الآن.')}
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <div class="section-title mt-0">
+        <span class="bar" style="background:var(--accent)"></span>
+        <h2>كامل سلسلة المتطلبات السابقة</h2>
+      </div>
+      <div id="chainWrap"></div>
+    </div>
+  `;
+
+  const ancestors = Array.from(getAncestors(course.code));
+  const chainWrap = document.getElementById('chainWrap');
+  if (!ancestors.length){
+    chainWrap.innerHTML = `<div class="rel-empty">هذا المقرر لا يعتمد على أي سلسلة متطلبات سابقة.</div>`;
+  } else {
+    chainWrap.innerHTML = relList(ancestors, '');
+  }
+}
+</script>
+</body>
+</html>
