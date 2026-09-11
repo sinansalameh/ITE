@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ملاحظات ومعلومات البرنامج — فرع الهندسة المعلوماتية (ITE)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.rtl.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="toolbar" style="position:static">
+  <div class="container d-flex justify-content-between align-items-center">
+    <a href="index.html" class="btn btn-outline-blueprint btn-sm">
+      <i class="bi bi-arrow-right me-1"></i> رجوع إلى المخطط
+    </a>
+    <span class="pill"><i class="bi bi-mortarboard me-1"></i> الإجازة في الهندسة المعلوماتية — ITE</span>
+    <a href="feedback.html" class="pill text-decoration-none" style="color:inherit">
+      <i class="bi bi-chat-square-text me-1"></i> شاركنا ملاحظاتك
+    </a>
+  </div>
+</div>
+
+<header class="hero py-4">
+  <div class="container">
+    <div class="eyebrow">الجامعة الافتراضية السورية — SVU</div>
+    <h1 class="h2">ملاحظات ومعلومات البرنامج</h1>
+    <p class="lead" id="goalText"></p>
+  </div>
+</header>
+
+<main class="container py-4" id="app">
+
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="info-card h-100">
+        <h3><i class="bi bi-door-open" style="color:var(--accent)"></i> شروط القبول</h3>
+        <ul id="admissionList"></ul>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="info-card h-100">
+        <h3><i class="bi bi-hourglass-split" style="color:var(--accent)"></i> مدة الدراسة والترفيع بين السنوات</h3>
+        <ul id="durationList"></ul>
+        <div class="table-responsive mt-3">
+          <table class="table table-sm table-borderless mb-0" style="color:var(--text-1)">
+            <thead>
+              <tr style="color:var(--text-2)">
+                <th>السنة التي سيُرفَّع إليها الطالب</th>
+                <th class="text-end">الحد الأدنى من الوحدات المعتمدة</th>
+              </tr>
+            </thead>
+            <tbody id="thresholdBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="info-card h-100">
+        <h3><i class="bi bi-clipboard-check" style="color:var(--accent)"></i> شروط النجاح والتقييم</h3>
+        <ul id="gradingList"></ul>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="info-card h-100">
+        <h3><i class="bi bi-signpost-split" style="color:var(--accent)"></i> اختيار الاختصاص</h3>
+        <p id="specializationText"></p>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="info-card">
+        <h3><i class="bi bi-patch-check" style="color:var(--accent)"></i> شروط الحصول على درجة الإجازة</h3>
+        <ol id="graduationList"></ol>
+        <div class="source-note">
+          المصدر: <a href="https://svuonline.org/ar/program/ite" target="_blank" rel="noopener" style="color:var(--accent)">svuonline.org/ar/program/ite</a>
+          — الصفحة الرسمية لبرنامج الإجازة في الهندسة المعلوماتية (ITE).
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="info-card">
+        <h3><i class="bi bi-stickies" style="color:var(--accent)"></i> ملاحظات إضافية حول المخطط والأسبقيات</h3>
+        <ul id="notesList"></ul>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="info-card">
+        <h3><i class="bi bi-palette" style="color:var(--accent)"></i> دليل الألوان والتمييز البصري</h3>
+        <div class="row g-2 mb-3" id="colorLegend"></div>
+        <p style="color:var(--text-1);font-size:.9rem">
+          عند المرور بالمؤشر فوق أي بطاقة مقرر في المخطط الرئيسي: تبقى كل البطاقات الأخرى معتّمة،
+          وتُبرَز البطاقة نفسها بإطار بلون تصنيفها، وتُبرَز <strong style="color:#F4B740">المتطلبات السابقة</strong>
+          (كامل السلسلة) بإطار كهرماني وشارة «متطلب سابق»، وتُبرَز
+          <strong style="color:#4CAF7D">المقررات المعتمِدة عليه</strong> (المباشرة فقط) بإطار أخضر وشارة «يعتمد عليه».
+        </p>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <span>مُعدّة اعتمادًا على الصفحة الرسمية لبرنامج ITE على موقع الجامعة الافتراضية السورية.</span>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script>
+document.getElementById('goalText').textContent = PROGRAM_INFO.goal;
+document.getElementById('admissionList').innerHTML = PROGRAM_INFO.admission.map(t => `<li>${t}</li>`).join('');
+document.getElementById('durationList').innerHTML = PROGRAM_INFO.duration.map(t => `<li>${t}</li>`).join('');
+document.getElementById('gradingList').innerHTML = PROGRAM_INFO.grading.map(t => `<li>${t}</li>`).join('');
+document.getElementById('graduationList').innerHTML = PROGRAM_INFO.graduation.map(t => `<li>${t}</li>`).join('');
+document.getElementById('specializationText').textContent = PROGRAM_INFO.specialization;
+document.getElementById('notesList').innerHTML = NOTES.map(n => `<li>${n}</li>`).join('');
+
+document.getElementById('thresholdBody').innerHTML = CREDIT_THRESHOLDS.map(r => `
+  <tr><td>السنة ${r.year}</td><td class="text-end mono" style="color:var(--accent)">${r.min} نقطة</td></tr>
+`).join('');
+
+document.getElementById('colorLegend').innerHTML = Object.entries(CATEGORIES).map(([id, cat]) => `
+  <div class="col-6 col-md-4 col-lg-3">
+    <div class="legend-key"><span class="swatch" style="background:${cat.color}"></span>${cat.label}</div>
+  </div>
+`).join('');
+</script>
+</body>
+</html>

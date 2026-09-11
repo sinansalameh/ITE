@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شارك ملاحظاتك — مخطط أسبقيات المقررات (ITE)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.rtl.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="toolbar" style="position:static">
+  <div class="container d-flex justify-content-between align-items-center">
+    <a href="index.html" class="btn btn-outline-blueprint btn-sm">
+      <i class="bi bi-arrow-right me-1"></i> رجوع إلى المخطط
+    </a>
+    <span class="pill"><i class="bi bi-chat-square-text me-1"></i> ملاحظات الطلاب</span>
+  </div>
+</div>
+
+<header class="hero py-4">
+  <div class="container">
+    <div class="eyebrow">مخطط أسبقيات المقررات — ITE</div>
+    <h1 class="h2">شاركنا ملاحظاتك</h1>
+    <p class="lead">
+      هل لاحظت خطأ في بيانات مقرر، أو متطلب سابق غير صحيح، أو لديك اقتراح لتحسين المخطط؟
+      الرسالة تصل مباشرة دون أن يظهر أي بريد إلكتروني لأحد. شكرًا لوقتك!
+    </p>
+  </div>
+</header>
+
+<main class="container py-4" style="max-width:720px">
+
+  <form id="feedbackForm" class="info-card">
+    <div class="mb-3">
+      <label class="form-label" for="fbType">نوع الملاحظة</label>
+      <select id="fbType" name="نوع الملاحظة" class="form-select" required>
+        <option value="" disabled selected>اختر نوع الملاحظة…</option>
+        <option value="خطأ في بيانات مقرر (رمز/اسم/نقاط/أسبقية)">خطأ في بيانات مقرر (رمز / اسم / نقاط / أسبقية)</option>
+        <option value="خطأ في الفصل الدراسي المعروض">خطأ في الفصل الدراسي المعروض</option>
+        <option value="اقتراح تحسين على الموقع">اقتراح تحسين على الموقع</option>
+        <option value="محتوى توصيف مقرر (أهداف/نتائج/مفردات)">محتوى توصيف مقرر (أهداف / نتائج / مفردات)</option>
+        <option value="ملاحظة عامة">ملاحظة عامة أخرى</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="fbCourse">رمز المقرر المعني (إن وجد)</label>
+      <input type="text" id="fbCourse" name="رمز المقرر" class="form-control" placeholder="مثال: BOS501 — اتركه فارغًا إذا لم ينطبق">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="fbMessage">تفاصيل الملاحظة <span style="color:#F16A6A">*</span></label>
+      <textarea id="fbMessage" name="الملاحظة" class="form-control" rows="5" required placeholder="اكتب ملاحظتك هنا بالتفصيل…"></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="fbName">اسمك (اختياري)</label>
+      <input type="text" id="fbName" name="الاسم" class="form-control" placeholder="اختياري">
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label" for="fbEmail">بريدك الإلكتروني (اختياري — فقط إذا رغبت بالرد عليك)</label>
+      <input type="email" id="fbEmail" name="email" class="form-control" placeholder="اختياري">
+    </div>
+
+    <!-- honeypot field to reduce spam; kept hidden from real users -->
+    <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off">
+
+    <button type="submit" id="fbSubmit" class="btn btn-blueprint w-100">
+      <i class="bi bi-send me-1"></i> إرسال الملاحظة
+    </button>
+
+    <div id="fbStatus" class="mt-3"></div>
+  </form>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <span>مُعدّة اعتمادًا على قائمة المقررات الرسمية للبرنامج والنماذج الاسترشادية لكل مسار (svuonline.org).</span>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   إرسال النموذج عبر Formspree — لا يظهر أي بريد إلكتروني للزائر.
+   يجب استبدال FORM_ENDPOINT أدناه بمُعرّف النموذج الخاص بك بعد
+   التسجيل المجاني على https://formspree.io (انظر التعليمات في
+   ملف README-feedback.txt المرفق).
+   ============================================================ */
+const FORM_ENDPOINT = "https://formspree.io/f/REPLACE_WITH_YOUR_FORM_ID";
+
+const form = document.getElementById('feedbackForm');
+const statusBox = document.getElementById('fbStatus');
+const submitBtn = document.getElementById('fbSubmit');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  if (FORM_ENDPOINT.includes('REPLACE_WITH_YOUR_FORM_ID')) {
+    statusBox.innerHTML = `<div class="alert alert-warning mb-0">
+      لم يتم ربط النموذج بعد بخدمة الإرسال. يرجى مراجعة ملف
+      <code>README-feedback.txt</code> لإكمال الإعداد (خطوة واحدة بسيطة).
+    </div>`;
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> جارٍ الإرسال…`;
+
+  try {
+    const res = await fetch(FORM_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: new FormData(form),
+    });
+
+    if (res.ok) {
+      form.reset();
+      statusBox.innerHTML = `<div class="alert alert-success mb-0">
+        <i class="bi bi-check-circle me-1"></i> شكرًا لك! تم إرسال ملاحظتك بنجاح.
+      </div>`;
+    } else {
+      throw new Error('bad response');
+    }
+  } catch (err) {
+    statusBox.innerHTML = `<div class="alert alert-danger mb-0">
+      حدث خطأ أثناء الإرسال. حاول مرة أخرى لاحقًا.
+    </div>`;
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = `<i class="bi bi-send me-1"></i> إرسال الملاحظة`;
+  }
+});
+</script>
+</body>
+</html>

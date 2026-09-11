@@ -199,8 +199,8 @@ body{
   color: var(--text-1);
 }
 .course-card .track-dots{
-  position:absolute; top:.7rem; left:.75rem;
-  display:flex; gap:.2rem;
+  display:inline-flex; gap:.2rem; margin-inline-start:.35rem;
+  vertical-align:middle;
 }
 .course-card .track-dots i{
   width:.42rem; height:.42rem; border-radius:50%; display:block;
@@ -341,3 +341,131 @@ footer.site-footer{
 @media (max-width: 575.98px){
   .course-grid{ grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); }
 }
+
+/* ---------- Term badge on cards ---------- */
+.course-card .term-badge{
+  font-size:.66rem;
+  font-weight:700;
+  color: var(--bg-0);
+  background: var(--cat);
+  border-radius: 5px;
+  padding:.08rem .45rem;
+  line-height:1.6;
+  white-space:nowrap;
+}
+.course-card .top-row .end-group{
+  display:flex; align-items:center; gap:.4rem;
+}
+
+/* ---------- Hover differentiation: prereq vs dependent ---------- */
+.course-grid.hovering .course-card.hl-prereq{
+  border-style: solid;
+  box-shadow: 0 0 0 2px #F4B740, 0 8px 22px -10px rgba(0,0,0,.6);
+}
+.course-grid.hovering .course-card.hl-dependent{
+  box-shadow: 0 0 0 2px #4CAF7D, 0 8px 22px -10px rgba(0,0,0,.6);
+}
+.rel-flag{
+  font-size:.64rem;
+  font-weight:700;
+  border-radius:5px;
+  padding:.12rem .5rem;
+  margin-bottom:.5rem;
+  display:none;
+  align-items:center;
+  gap:.2rem;
+  width:fit-content;
+}
+.course-card.hl-prereq .rel-flag.flag-prereq{
+  display:inline-flex;
+  background: rgba(244,183,64,.15);
+  color:#F4B740;
+  border:1px solid #F4B74066;
+}
+.course-card.hl-dependent .rel-flag.flag-dependent{
+  display:inline-flex;
+  background: rgba(76,175,125,.15);
+  color:#4CAF7D;
+  border:1px solid #4CAF7D66;
+}
+
+/* ---------- Sort / filter toolbar rows ---------- */
+.toolbar .subrow{
+  margin-top:.5rem;
+}
+.toolbar label.small-label{
+  font-size:.72rem;
+  color: var(--text-2);
+  margin-bottom:.2rem;
+  display:block;
+}
+
+/* ---------- Notes page ---------- */
+.info-card{
+  border:1px solid var(--line);
+  background: var(--bg-2);
+  border-radius: var(--radius);
+  padding: 1.3rem 1.4rem;
+  height:100%;
+}
+.info-card h3{
+  font-size:1rem;
+  font-weight:800;
+  margin-bottom:.75rem;
+  display:flex; align-items:center; gap:.5rem;
+}
+.info-card ol, .info-card ul{
+  padding-inline-start: 1.2rem;
+  color: var(--text-1);
+  margin-bottom:0;
+}
+.info-card li{ margin-bottom:.5rem; }
+.info-card p{ color: var(--text-1); margin-bottom:0; }
+.source-note{
+  font-size:.78rem;
+  color: var(--text-2);
+  border-top:1px dashed var(--line);
+  margin-top:1rem;
+  padding-top:.75rem;
+}
+.legend-key{
+  display:flex; align-items:center; gap:.6rem;
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:.55rem .8rem;
+  background: var(--bg-2);
+  font-size:.85rem;
+  color: var(--text-1);
+}
+.legend-key .swatch{
+  width:1.1rem; height:1.1rem; border-radius:5px; flex:none;
+}
+
+/* ---------- Course info placeholder (detail page) ---------- */
+.placeholder-box{
+  border:1px dashed var(--line);
+  border-radius: 8px;
+  padding: .9rem 1rem;
+  color: var(--text-2);
+  font-size:.85rem;
+  background: repeating-linear-gradient(135deg, rgba(255,255,255,.015) 0 10px, transparent 10px 20px);
+}
+.placeholder-box .fill-hint{
+  color: var(--accent);
+  font-weight:700;
+}
+
+/* ---------- Feedback form alerts (dark theme) ---------- */
+.alert{ border-radius:8px; font-size:.9rem; }
+.alert-success{ background: rgba(76,175,125,.12); color:#4CAF7D; border:1px solid rgba(76,175,125,.35); }
+.alert-warning{ background: rgba(244,183,64,.12); color:#F4B740; border:1px solid rgba(244,183,64,.35); }
+.alert-danger{ background: rgba(241,106,106,.12); color:#F16A6A; border:1px solid rgba(241,106,106,.35); }
+.info-card .form-label{ color:var(--text-1); font-weight:600; font-size:.88rem; }
+.info-card .form-control, .info-card .form-select{
+  background: var(--bg-1); border:1px solid var(--line); color:var(--text-0);
+}
+.info-card .form-control:focus, .info-card .form-select:focus{
+  background: var(--bg-1); color:var(--text-0); border-color:var(--accent);
+  box-shadow: 0 0 0 .2rem rgba(92,141,255,.2);
+}
+.info-card .form-control::placeholder{ color:var(--text-2); }

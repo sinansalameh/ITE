@@ -21,19 +21,30 @@
         <div class="eyebrow">فرع الهندسة المعلوماتية — ITE</div>
         <h1>مخطط أسبقيات المقررات</h1>
         <p class="lead">
-          خريطة تفاعلية لجميع المقررات الأساسية ومسارات التخصص الستة، مع إظهار سلسلة
-          المتطلبات السابقة لكل مقرر عند المرور عليه بالمؤشر. اضغط أي بطاقة للاطلاع
-          على تفاصيلها الكاملة.
+          خريطة تفاعلية لجميع المقررات العامة والأساسية ومسارات التخصص الستة، مع رقم
+          الفصل الدراسي لكل مقرر، وإمكانية الترتيب والتصفية حسب التصنيف أو الفصل.
+          مرّر المؤشر فوق أي بطاقة لتمييز متطلباتها السابقة والمقررات التي تعتمد عليها،
+          واضغطها للاطلاع على تفاصيلها الكاملة.
         </p>
       </div>
-      <div class="col-lg-4">
+      <div class="col-lg-4 d-flex flex-column gap-2">
+        <a href="notes.html" class="plate text-decoration-none d-flex justify-content-between align-items-center" style="color:inherit">
+          <span><i class="bi bi-journal-text me-2" style="color:var(--accent)"></i>ملاحظات ومعلومات البرنامج</span>
+          <i class="bi bi-arrow-left"></i>
+        </a>
+        <a href="feedback.html" class="plate text-decoration-none d-flex justify-content-between align-items-center" style="color:inherit">
+          <span><i class="bi bi-chat-square-text me-2" style="color:var(--accent)"></i>شاركنا ملاحظاتك</span>
+          <i class="bi bi-arrow-left"></i>
+        </a>
         <div class="plate">
-          <div class="d-flex justify-content-between mb-2">
-            <span class="text-secondary" style="color:var(--text-2)!important">الحد الأدنى من النقاط للترفيع</span>
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span style="color:var(--text-2)">إجمالي المقررات المعروضة حاليًا</span>
+            <span id="heroCount" class="mono" style="color:var(--accent);font-weight:800">—</span>
           </div>
-          <table class="table table-sm table-borderless mb-0" style="color:var(--text-1)">
-            <tbody id="threshold-table"></tbody>
-          </table>
+          <div class="d-flex justify-content-between align-items-center">
+            <span style="color:var(--text-2)">مجموع نقاط الاعتماد</span>
+            <span id="heroCredits" class="mono" style="color:var(--accent);font-weight:800">—</span>
+          </div>
         </div>
       </div>
     </div>
@@ -43,17 +54,32 @@
 <!-- ===================== Toolbar ===================== -->
 <div class="toolbar">
   <div class="container">
-    <div class="row g-2 align-items-center">
-      <div class="col-12 col-md-4">
-        <select id="trackFilter" class="form-select" aria-label="تصفية حسب المسار">
-          <option value="all">جميع المقررات (الأساسية + كل المسارات)</option>
-          <option value="foundation">المقررات الأساسية والعامة فقط</option>
+    <div class="row g-2 align-items-end">
+      <div class="col-6 col-md-3">
+        <label class="small-label" for="sortMode">الترتيب حسب</label>
+        <select id="sortMode" class="form-select form-select-sm">
+          <option value="classification">التصنيف الرئيسي</option>
+          <option value="term">الفصل الدراسي</option>
         </select>
       </div>
-      <div class="col-12 col-md-4">
-        <input id="searchBox" type="search" class="form-control" placeholder="ابحث باسم المقرر أو رمزه… مثال: الذكاء الصنعي أو BAI501">
+      <div class="col-6 col-md-3">
+        <label class="small-label" for="trackFilter">تصفية حسب التصنيف</label>
+        <select id="trackFilter" class="form-select form-select-sm" aria-label="تصفية حسب المسار">
+          <option value="all">جميع المقررات (العامة/الأساسية + كل المسارات)</option>
+          <option value="foundation">المقررات العامة والأساسية فقط</option>
+        </select>
       </div>
-      <div class="col-12 col-md-4 d-flex justify-content-md-end">
+      <div class="col-6 col-md-2">
+        <label class="small-label" for="termFilter">تصفية حسب الفصل</label>
+        <select id="termFilter" class="form-select form-select-sm">
+          <option value="all">كل الفصول</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="small-label" for="searchBox">بحث</label>
+        <input id="searchBox" type="search" class="form-control form-control-sm" placeholder="اسم أو رمز المقرر…">
+      </div>
+      <div class="col-12 col-md-2 d-flex justify-content-md-end">
         <div id="resultCount" class="pill">— نتيجة</div>
       </div>
     </div>
@@ -75,34 +101,26 @@
     لا توجد مقررات مطابقة لبحثك. جرّب كلمة أخرى أو أعد ضبط التصفية.
   </div>
 
-  <!-- ملاحظات المخطط الأصلي -->
-  <div class="mt-5">
-    <div class="section-title">
-      <span class="bar" style="background:var(--accent)"></span>
-      <h2>ملاحظات هامة من المخطط الرسمي</h2>
-    </div>
-    <div class="accordion notes-card" id="notesAccordion">
-      <div class="accordion-item" style="background:transparent;border:none">
-        <h2 class="accordion-header">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#notesBody">
-            اضغط لعرض / إخفاء الملاحظات
-          </button>
-        </h2>
-        <div id="notesBody" class="accordion-collapse collapse" data-bs-parent="#notesAccordion">
-          <div class="accordion-body">
-            <ul id="notesList"></ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
 </main>
 
 <footer class="site-footer">
-  <div class="container d-flex flex-wrap justify-content-between gap-2">
-    <span>مُعدّة اعتمادًا على مخطط الأسبقيات الرسمي لفرع الهندسة المعلوماتية (ITE).</span>
-    <span>بعض أسهم الأسبقية في المخطط الأصلي كثيفة ومتشابكة — إن لاحظت خطأ في مقرر معيّن أعلمني به لتصحيحه.</span>
+  <div class="container">
+    <div class="mb-2">
+      <strong style="color:var(--text-1)">دليل ألوان المرور (Hover):</strong>
+      عند المرور بالمؤشر فوق أي مقرر — تبقى بقية البطاقات معتّمة، وتُبرَز فقط:
+      <span class="d-inline-flex align-items-center gap-1 mx-1"><i class="bi bi-square-fill" style="color:#F4B740"></i>إطار كهرماني + شارة «متطلب سابق»</span>
+      لكل مقرر يجب اجتيازه أولًا،
+      و<span class="d-inline-flex align-items-center gap-1 mx-1"><i class="bi bi-square-fill" style="color:#4CAF7D"></i>إطار أخضر + شارة «يعتمد عليه»</span>
+      لكل مقرر يشترط هذا المقرر كمتطلب سابق له.
+    </div>
+    <div class="d-flex flex-wrap justify-content-between gap-2">
+      <span>مُعدّة اعتمادًا على قائمة المقررات الرسمية للبرنامج والنماذج الاسترشادية لكل مسار (svuonline.org).</span>
+      <span>
+        <a href="notes.html" class="text-decoration-none" style="color:var(--accent)">ملاحظات ومعلومات البرنامج</a>
+        ·
+        <a href="feedback.html" class="text-decoration-none" style="color:var(--accent)">شاركنا ملاحظاتك ←</a>
+      </span>
+    </div>
   </div>
 </footer>
 
@@ -114,13 +132,17 @@
    ============================================================ */
 const sectionsWrap = document.getElementById('sectionsWrap');
 const emptyState   = document.getElementById('emptyState');
+const sortMode     = document.getElementById('sortMode');
 const trackFilter  = document.getElementById('trackFilter');
+const termFilter   = document.getElementById('termFilter');
 const searchBox    = document.getElementById('searchBox');
 const resultCount  = document.getElementById('resultCount');
 const legendEl     = document.getElementById('legend');
 const statsRow     = document.getElementById('statsRow');
+const heroCount    = document.getElementById('heroCount');
+const heroCredits  = document.getElementById('heroCredits');
 
-// تعبئة قائمة المسارات
+// تعبئة قائمة المسارات (تصفية حسب التصنيف)
 const trackGroups = {};
 TRACKS.forEach(t => { (trackGroups[t.group] ||= []).push(t); });
 Object.entries(trackGroups).forEach(([group, list]) => {
@@ -135,24 +157,45 @@ Object.entries(trackGroups).forEach(([group, list]) => {
   trackFilter.appendChild(og);
 });
 
-// جدول الحد الأدنى من النقاط
-document.getElementById('threshold-table').innerHTML = CREDIT_THRESHOLDS.map(r => `
-  <tr><td>السنة ${r.year}</td><td class="text-end mono" style="color:var(--accent)">${r.min} نقطة</td></tr>
-`).join('');
+// تعبئة قائمة الفصول
+for (let i = 1; i <= 10; i++) {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = `الفصل ${TERM_LABELS[i]}`;
+  termFilter.appendChild(opt);
+}
 
-// الملاحظات
-document.getElementById('notesList').innerHTML = NOTES.map(n => `<li>${n}</li>`).join('');
-
-// الأسطورة اللونية (Legend) — تُبنى حسب القسم الظاهر حاليًا
 function trackColor(id){ return (TRACKS.find(t => t.id === id) || {}).color; }
 
-function currentFilterPredicate(){
+function currentTrackPredicate(){
   const val = trackFilter.value;
   return (course) => {
     if (val === 'all') return true;
     if (val === 'foundation') return course.tracks.length === 0;
     return course.tracks.length === 0 || course.tracks.includes(val);
   };
+}
+
+function currentTermPredicate(){
+  const val = termFilter.value;
+  if (val === 'all') return () => true;
+  const t = parseInt(val, 10);
+  return (course) => allPossibleTerms(course).includes(t);
+}
+
+function courseMatchesSearch(course, q){
+  if (!q) return true;
+  q = q.trim().toLowerCase();
+  return course.name.toLowerCase().includes(q) ||
+         course.nameEn.toLowerCase().includes(q) ||
+         course.code.toLowerCase().includes(q);
+}
+
+// الفصل المعروض لبطاقة معيّنة بحسب تصفية التصنيف الحالية (إن حُدد مسار واحد بعينه)
+function displayTerm(course){
+  const val = trackFilter.value;
+  const singleTrack = (val !== 'all' && val !== 'foundation') ? val : null;
+  return effectiveTerm(course, singleTrack);
 }
 
 function buildLegend(activeCategories){
@@ -162,38 +205,48 @@ function buildLegend(activeCategories){
   }).join('');
 }
 
-function courseMatchesSearch(course, q){
-  if (!q) return true;
-  q = q.trim().toLowerCase();
-  return course.name.toLowerCase().includes(q) || course.code.toLowerCase().includes(q);
-}
-
 function render(){
-  const predicate = currentFilterPredicate();
+  const tPred = currentTrackPredicate();
+  const termPred = currentTermPredicate();
   const q = searchBox.value;
-  const visible = COURSES.filter(c => predicate(c) && courseMatchesSearch(c, q));
+  const visible = COURSES.filter(c => tPred(c) && termPred(c) && courseMatchesSearch(c, q));
 
   resultCount.innerHTML = `<i class="bi bi-collection me-1"></i> ${visible.length} مقرر`;
-
-  // تجميع حسب القسم بالترتيب المحدد مسبقًا
-  const byCat = {};
-  visible.forEach(c => (byCat[c.category] ||= []).push(c));
-
-  const activeSections = SECTION_ORDER.filter(catId => byCat[catId] && byCat[catId].length);
-  buildLegend(activeSections);
+  heroCount.textContent = visible.length;
+  heroCredits.textContent = visible.reduce((s,c) => s + c.credits, 0);
 
   if (!visible.length){
     sectionsWrap.innerHTML = '';
     emptyState.classList.remove('d-none');
+    buildLegend([]);
     renderStats([]);
     return;
   }
   emptyState.classList.add('d-none');
 
+  if (sortMode.value === 'term'){
+    renderByTerm(visible);
+  } else {
+    renderByClassification(visible);
+  }
+
+  bindCardEvents();
+  renderStats(visible);
+}
+
+function renderByClassification(visible){
+  const byCat = {};
+  visible.forEach(c => (byCat[c.category] ||= []).push(c));
+  const activeSections = SECTION_ORDER.filter(catId => byCat[catId] && byCat[catId].length);
+  buildLegend(activeSections);
+
   sectionsWrap.innerHTML = activeSections.map(catId => {
     const cat = CATEGORIES[catId];
     const isTrack = catId.startsWith('track-');
-    const cards = byCat[catId].map(c => courseCardHTML(c)).join('');
+    const cards = byCat[catId]
+      .slice()
+      .sort((a,b) => displayTerm(a) - displayTerm(b))
+      .map(c => courseCardHTML(c)).join('');
     return `
       <section>
         <div class="section-title">
@@ -206,13 +259,38 @@ function render(){
         </div>
       </section>`;
   }).join('');
+}
 
-  bindCardEvents();
-  renderStats(visible);
+function renderByTerm(visible){
+  const byTerm = {};
+  visible.forEach(c => {
+    const t = displayTerm(c);
+    (byTerm[t] ||= []).push(c);
+  });
+  const catsPresent = new Set(visible.map(c => c.category));
+  buildLegend(SECTION_ORDER.filter(id => catsPresent.has(id)));
+
+  const terms = Object.keys(byTerm).map(Number).sort((a,b) => a-b);
+  sectionsWrap.innerHTML = terms.map(t => {
+    const cards = byTerm[t]
+      .slice()
+      .sort((a,b) => a.category.localeCompare(b.category))
+      .map(c => courseCardHTML(c)).join('');
+    return `
+      <section>
+        <div class="section-title">
+          <span class="bar" style="background:var(--accent)"></span>
+          <h2>الفصل ${TERM_LABELS[t]}</h2>
+          <span class="count">(${byTerm[t].length})</span>
+        </div>
+        <div class="course-grid" data-term="${t}">${cards}</div>
+      </section>`;
+  }).join('');
 }
 
 function courseCardHTML(c){
   const cat = CATEGORIES[c.category];
+  const term = displayTerm(c);
   const prereqTags = c.prereq.length
     ? c.prereq.map(p => `<span class="tag">${p}</span>`).join('')
     : `<span style="color:var(--text-2)">لا يوجد متطلب سابق</span>`;
@@ -221,10 +299,14 @@ function courseCardHTML(c){
   return `
     <a class="course-card" href="course.html?code=${encodeURIComponent(c.code)}" target="_blank" rel="noopener"
        data-code="${c.code}" style="--cat:${cat.color}">
-      ${trackDots ? `<span class="track-dots">${trackDots}</span>` : ''}
+      <span class="rel-flag flag-prereq"><i class="bi bi-arrow-left-short"></i> متطلب سابق</span>
+      <span class="rel-flag flag-dependent"><i class="bi bi-arrow-right-short"></i> يعتمد عليه</span>
       <div class="top-row">
-        <span class="code mono">${c.code}</span>
-        <span class="credits mono">${c.credits} نقطة</span>
+        <span class="code mono">${c.code}${trackDots ? `<span class="track-dots">${trackDots}</span>` : ''}</span>
+        <span class="end-group">
+          <span class="term-badge">ف${term}</span>
+          <span class="credits mono">${c.credits} نقطة</span>
+        </span>
       </div>
       <div class="name">${c.name}</div>
       <div class="prereq-row">${prereqTags}</div>
@@ -286,7 +368,9 @@ function clearHighlight(){
   allVisibleCards().forEach(card => card.classList.remove('hl-self','hl-prereq','hl-dependent'));
 }
 
+sortMode.addEventListener('change', render);
 trackFilter.addEventListener('change', render);
+termFilter.addEventListener('change', render);
 searchBox.addEventListener('input', render);
 
 render();
