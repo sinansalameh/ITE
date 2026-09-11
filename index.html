@@ -124,6 +124,32 @@
   </div>
 </footer>
 
+<!-- ===================== Chain panel (pin-to-explore) ===================== -->
+<div id="chainPanel" class="chain-panel" role="dialog" aria-label="سلسلة أسبقيات المقرر">
+  <div class="chain-panel-header">
+    <div>
+      <span class="chain-panel-code mono" id="chainPanelCode"></span>
+      <span class="chain-panel-name" id="chainPanelName"></span>
+    </div>
+    <button type="button" class="chain-panel-close" id="chainPanelClose" aria-label="إغلاق">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+  <div class="chain-panel-body">
+    <div class="chain-panel-section">
+      <div class="chain-panel-label"><i class="bi bi-arrow-left-short"></i> المتطلبات السابقة (كامل السلسلة)</div>
+      <div class="chain-panel-list" id="chainPanelPrereq"></div>
+    </div>
+    <div class="chain-panel-section">
+      <div class="chain-panel-label"><i class="bi bi-arrow-right-short"></i> يعتمد عليه مباشرة</div>
+      <div class="chain-panel-list" id="chainPanelDependent"></div>
+    </div>
+  </div>
+  <a href="#" id="chainPanelOpen" class="chain-panel-open-link" target="_blank" rel="noopener">
+    فتح صفحة تفاصيل هذا المقرر <i class="bi bi-box-arrow-up-left"></i>
+  </a>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
 <script src="data.js"></script>
 <script>
@@ -304,6 +330,10 @@ function courseCardHTML(c){
       <div class="top-row">
         <span class="code mono">${c.code}${trackDots ? `<span class="track-dots">${trackDots}</span>` : ''}</span>
         <span class="end-group">
+          <span class="pin-btn" role="button" tabindex="0" aria-pressed="false"
+                data-code="${c.code}" title="تثبيت إبراز هذا المقرر (يبقى ظاهرًا أثناء التمرير)">
+            <i class="bi bi-pin-angle"></i>
+          </span>
           <span class="term-badge">ف${term}</span>
           <span class="credits mono">${c.credits} نقطة</span>
         </span>
@@ -333,15 +363,71 @@ function renderStats(visible){
     </div>`).join('');
 }
 
-/* ---------- تأثير المرور: إبراز المتطلبات السابقة/اللاحقة ---------- */
+/* ---------- إبراز المتطلبات: تثبيت بالنقر/اللمس + لوحة السلسلة ---------- */
+const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+let pinnedCode = null;
+
+const chainPanel      = document.getElementById('chainPanel');
+const chainPanelCode  = document.getElementById('chainPanelCode');
+const chainPanelName  = document.getElementById('chainPanelName');
+const chainPanelPrereq= document.getElementById('chainPanelPrereq');
+const chainPanelDep   = document.getElementById('chainPanelDependent');
+const chainPanelOpen  = document.getElementById('chainPanelOpen');
+const chainPanelClose = document.getElementById('chainPanelClose');
+
 function bindCardEvents(){
   document.querySelectorAll('.course-grid').forEach(grid => {
     grid.querySelectorAll('.course-card').forEach(card => {
-      card.addEventListener('mouseenter', () => highlight(card.dataset.code));
-      card.addEventListener('focus', () => highlight(card.dataset.code));
-      card.addEventListener('mouseleave', clearHighlight);
-      card.addEventListener('blur', clearHighlight);
+      if (canHover){
+        card.addEventListener('mouseenter', () => { if (!pinnedCode) highlight(card.dataset.code); });
+        card.addEventListener('mouseleave', () => { if (!pinnedCode) clearHighlight(); });
+      }
+      card.addEventListener('focus', () => { if (!pinnedCode) highlight(card.dataset.code); });
+      card.addEventListener('blur', () => { if (!pinnedCode) clearHighlight(); });
     });
+    grid.querySelectorAll('.pin-btn').forEach(btn => {
+      btn.addEventListener('click', onPinActivate);
+      btn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); onPinActivate(e); }
+      });
+    });
+  });
+  markPinnedButtons();
+  // إن كان هناك مقرر مثبّت من قبل، أعد تطبيق الإبراز على البطاقات الظاهرة حاليًا
+  if (pinnedCode) highlight(pinnedCode);
+}
+
+function onPinActivate(e){
+  e.preventDefault();
+  e.stopPropagation();
+  const code = e.currentTarget.dataset.code;
+  togglePin(code);
+}
+
+function togglePin(code){
+  if (pinnedCode === code){
+    unpin();
+  } else {
+    pinnedCode = code;
+    highlight(code);
+    showPanel(code);
+    markPinnedButtons();
+  }
+}
+
+function unpin(){
+  pinnedCode = null;
+  clearHighlight();
+  hidePanel();
+  markPinnedButtons();
+}
+
+function markPinnedButtons(){
+  document.querySelectorAll('.pin-btn').forEach(btn => {
+    const active = btn.dataset.code === pinnedCode;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    btn.innerHTML = active ? '<i class="bi bi-pin-angle-fill"></i>' : '<i class="bi bi-pin-angle"></i>';
   });
 }
 
@@ -367,6 +453,88 @@ function clearHighlight(){
   document.querySelectorAll('.course-grid').forEach(g => g.classList.remove('hovering'));
   allVisibleCards().forEach(card => card.classList.remove('hl-self','hl-prereq','hl-dependent'));
 }
+
+/* ---------- لوحة السلسلة (chain panel) ---------- */
+function chainItemHTML(code){
+  const c = COURSE_MAP[code];
+  if (!c) return '';
+  return `<button type="button" class="chain-item" data-code="${code}">
+      <span class="chain-item-name">${c.name}</span>
+      <span class="chain-item-code mono">${code}</span>
+    </button>`;
+}
+
+function showPanel(code){
+  const c = COURSE_MAP[code];
+  if (!c) return;
+
+  chainPanelCode.textContent = code;
+  chainPanelName.textContent = c.name;
+  chainPanelOpen.href = `course.html?code=${encodeURIComponent(code)}`;
+
+  const ancestors = Array.from(getAncestors(code))
+    .sort((a,b) => (COURSE_MAP[a].term||0) - (COURSE_MAP[b].term||0));
+  const dependents = (c.dependents || [])
+    .slice()
+    .sort((a,b) => (COURSE_MAP[a].term||0) - (COURSE_MAP[b].term||0));
+
+  chainPanelPrereq.innerHTML = ancestors.length
+    ? ancestors.map(chainItemHTML).join('')
+    : `<div class="chain-panel-empty">لا يوجد متطلب سابق لهذا المقرر.</div>`;
+
+  chainPanelDep.innerHTML = dependents.length
+    ? dependents.map(chainItemHTML).join('')
+    : `<div class="chain-panel-empty">لا توجد مقررات تعتمد على هذا المقرر مباشرة.</div>`;
+
+  chainPanel.classList.add('open');
+  bindChainItemEvents();
+}
+
+function hidePanel(){
+  chainPanel.classList.remove('open');
+}
+
+function bindChainItemEvents(){
+  chainPanel.querySelectorAll('.chain-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const code = btn.dataset.code;
+      // إعادة تثبيت الإبراز على المقرر المختار (استكشاف متسلسل) والانتقال إليه بصريًا
+      pinnedCode = code;
+      highlight(code);
+      showPanel(code);
+      markPinnedButtons();
+      scrollToCard(code);
+    });
+  });
+}
+
+function scrollToCard(code){
+  const el = document.querySelector(`.course-card[data-code="${code}"]`);
+  if (el){
+    el.scrollIntoView({ behavior:'smooth', block:'center', inline:'nearest' });
+    el.classList.add('pulse');
+    setTimeout(() => el.classList.remove('pulse'), 1600);
+  } else {
+    // المقرر غير ظاهر ضمن عوامل التصفية الحالية — أعرض تلميحًا لإظهار الكل ثم أعد المحاولة
+    const hint = document.createElement('div');
+    hint.className = 'chain-panel-hint';
+    hint.innerHTML = `
+      <span>هذا المقرر غير ظاهر ضمن التصفية الحالية.</span>
+      <button type="button" class="btn btn-sm btn-blueprint">إظهار الكل والانتقال إليه</button>`;
+    hint.querySelector('button').addEventListener('click', () => {
+      trackFilter.value = 'all';
+      termFilter.value = 'all';
+      searchBox.value = '';
+      render();
+      setTimeout(() => scrollToCard(code), 60);
+      hint.remove();
+    });
+    chainPanel.querySelector('.chain-panel-body').prepend(hint);
+    setTimeout(() => hint.remove(), 6000);
+  }
+}
+
+chainPanelClose.addEventListener('click', unpin);
 
 sortMode.addEventListener('change', render);
 trackFilter.addEventListener('change', render);
