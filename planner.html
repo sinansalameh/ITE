@@ -44,6 +44,12 @@
   <div class="container">
     <div class="row g-2 align-items-end">
       <div class="col-6 col-md-3">
+        <label class="small-label">الحساب</label>
+        <button id="btnAccount" class="btn btn-sm btn-outline-blueprint w-100" data-bs-toggle="modal" data-bs-target="#authModal">
+          <i class="bi bi-cloud me-1"></i> <span id="accountBtnLabel">تسجيل الدخول لمزامنة خطتك</span>
+        </button>
+      </div>
+      <div class="col-6 col-md-3">
         <label class="small-label" for="trackFilter">المسار / التخصص</label>
         <select id="trackFilter" class="form-select form-select-sm"></select>
       </div>
@@ -135,9 +141,80 @@
 
 <div id="toast" class="planner-toast"></div>
 
+<!-- ===================== Auth modal ===================== -->
+<div class="modal fade no-print" id="authModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content planner-modal">
+      <div class="modal-header">
+        <h5 class="modal-title" id="authModalTitle">تسجيل الدخول لمزامنة خطتك</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+
+        <div id="authGuestPanel">
+          <ul class="nav nav-tabs mb-3" id="authTabs">
+            <li class="nav-item"><button class="nav-link active" data-tab="signin" type="button">تسجيل الدخول</button></li>
+            <li class="nav-item"><button class="nav-link" data-tab="signup" type="button">حساب جديد</button></li>
+          </ul>
+
+          <div id="authNotConfigured" class="alert alert-warning d-none">
+            المزامنة السحابية لم تُفعَّل بعد على هذا الموقع. راجع ملف
+            <code>README-supabase.txt</code> لإكمال الإعداد (خطوة واحدة من صاحب الموقع، وليست منك).
+          </div>
+
+          <form id="authForm">
+            <div class="mb-2">
+              <label class="small-label">البريد الإلكتروني</label>
+              <input type="email" id="authEmail" class="form-control form-control-sm" required>
+            </div>
+            <div class="mb-3">
+              <label class="small-label">كلمة المرور</label>
+              <input type="password" id="authPassword" class="form-control form-control-sm" minlength="6" required>
+            </div>
+            <button type="submit" id="authSubmitBtn" class="btn btn-blueprint w-100">تسجيل الدخول</button>
+            <div id="authStatus" class="mt-2" style="font-size:.85rem"></div>
+          </form>
+        </div>
+
+        <div id="authUserPanel" class="d-none">
+          <p style="color:var(--text-1)">
+            متصل حاليًا كـ <strong id="authUserEmail" class="mono"></strong>
+          </p>
+          <p style="color:var(--text-2);font-size:.85rem">
+            تُزامَن خطتك تلقائيًا مع حسابك عند أي تغيير، ويمكنك فتحها من أي جهازٍ آخر بتسجيل الدخول
+            بنفس الحساب.
+          </p>
+          <button id="btnSyncNow" class="btn btn-sm btn-outline-blueprint w-100 mb-2">
+            <i class="bi bi-arrow-repeat me-1"></i> مزامنة الآن يدويًا
+          </button>
+          <button id="btnSignOut" class="btn btn-sm w-100" style="border:1px solid #F16A6A;color:#F16A6A;background:transparent">
+            <i class="bi bi-box-arrow-right me-1"></i> تسجيل الخروج
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="data.js"></script>
 <script>
+/* ============================================================
+   مزامنة سحابية اختيارية عبر Supabase — راجع README-supabase.txt
+   ملاحظة: كل شيء في هذه الصفحة يعمل بشكل كامل محليًا (localStorage)
+   حتى لو لم تُملأ القيمتان أدناه؛ تسجيل الدخول اختياري تمامًا ويضيف
+   فقط إمكانية فتح نفس الخطة من جهاز آخر.
+   ============================================================ */
+const SUPABASE_URL = "sb_publishable_JOcBBsrH1ljlBFugxekDdQ_lp_Q-ogb";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVva3Z4Z3BxcndpcGVybm5wbXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyNDU2NjQsImV4cCI6MjEwNDgyMTY2NH0._jzqe0sHNLCEfQdkOEBKkq5jWxFFI4LLfhYEANRhzNM";
+const CLOUD_ENABLED = !SUPABASE_URL.includes('REPLACE_WITH') && !SUPABASE_ANON_KEY.includes('REPLACE_WITH');
+const sb = CLOUD_ENABLED ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+let currentUser = null;
+let cloudPushTimer = null;
+
 /* ============================================================
    حالة المخطط الشخصي (تُحفظ في localStorage + قابلة للمشاركة عبر رابط)
    ============================================================ */
@@ -161,12 +238,18 @@ function loadFromStorage(){
   return localStorage.getItem(LS_TRACK) || 'foundation';
 }
 
-function saveToStorage(trackVal){
+function writeLocal(trackVal){
   localStorage.setItem(LS_STATUS, JSON.stringify(statusMap));
   localStorage.setItem(LS_GRADES, JSON.stringify(gradeMap));
   localStorage.setItem(LS_TRACK, trackVal);
-  showToast('تم حفظ تقدّمك في هذا المتصفح');
 }
+
+function saveToStorage(trackVal){
+  writeLocal(trackVal);
+  showToast('تم حفظ تقدّمك في هذا المتصفح');
+  scheduleCloudPush();
+}
+
 
 function showToast(msg){
   const t = document.getElementById('toast');
@@ -549,6 +632,178 @@ document.getElementById('btnShare').addEventListener('click', async () => {
 
 trackFilter.addEventListener('change', () => { saveToStorage(trackFilter.value); render(); });
 
+/* ============================================================
+   المزامنة السحابية (Supabase) — كل هذا يبقى خاملًا بأمان إذا CLOUD_ENABLED=false
+   ============================================================ */
+function scheduleCloudPush(){
+  if (!CLOUD_ENABLED || !currentUser) return;
+  clearTimeout(cloudPushTimer);
+  cloudPushTimer = setTimeout(pushToCloud, 900);
+}
+
+async function pushToCloud(){
+  if (!CLOUD_ENABLED || !currentUser) return;
+  try{
+    await sb.from('course_status').delete().eq('user_id', currentUser.id);
+    const rows = Object.entries(statusMap).map(([code, status]) => ({
+      user_id: currentUser.id,
+      course_code: code,
+      status,
+      grade: (gradeMap[code] !== undefined && gradeMap[code] !== null && gradeMap[code] !== '') ? gradeMap[code] : null,
+    }));
+    if (rows.length){
+      const { error } = await sb.from('course_status').insert(rows);
+      if (error) throw error;
+    }
+    setAuthStatus('تمت المزامنة مع حسابك ✓', false);
+  }catch(err){
+    console.error(err);
+    setAuthStatus('تعذّرت المزامنة مع الحساب: ' + err.message, true);
+  }
+}
+
+async function pullFromCloud(){
+  const { data, error } = await sb.from('course_status').select('*').eq('user_id', currentUser.id);
+  if (error){ console.error(error); return { cloudStatus:{}, cloudGrade:{}, hasData:false }; }
+  const cloudStatus = {}, cloudGrade = {};
+  data.forEach(r => {
+    cloudStatus[r.course_code] = r.status;
+    if (r.grade !== null && r.grade !== undefined) cloudGrade[r.course_code] = r.grade;
+  });
+  return { cloudStatus, cloudGrade, hasData: data.length > 0 };
+}
+
+async function handlePostLogin(){
+  const cloud = await pullFromCloud();
+  const hasLocal = Object.keys(statusMap).length > 0;
+
+  if (cloud.hasData && hasLocal){
+    const useCloud = confirm(
+      'لديك بيانات محفوظة محليًا في هذا المتصفح، وبيانات أخرى محفوظة مسبقًا في حسابك.\n\n' +
+      'اضغط «موافق» لاستخدام النسخة المحفوظة في حسابك (سيُستبدل ما هو محلي).\n' +
+      'اضغط «إلغاء» لرفع نسختك المحلية الحالية إلى حسابك بدلًا منها.'
+    );
+    if (useCloud){ statusMap = cloud.cloudStatus; gradeMap = cloud.cloudGrade; writeLocal(trackFilter.value); }
+    else { await pushToCloud(); }
+  } else if (cloud.hasData){
+    statusMap = cloud.cloudStatus; gradeMap = cloud.cloudGrade; writeLocal(trackFilter.value);
+  } else if (hasLocal){
+    await pushToCloud();
+  }
+  render();
+}
+
+/* ---------- واجهة تسجيل الدخول ---------- */
+const authModalEl   = document.getElementById('authModal');
+const authGuestPanel= document.getElementById('authGuestPanel');
+const authUserPanel = document.getElementById('authUserPanel');
+const authForm      = document.getElementById('authForm');
+const authEmail     = document.getElementById('authEmail');
+const authPassword  = document.getElementById('authPassword');
+const authSubmitBtn = document.getElementById('authSubmitBtn');
+const authStatusEl  = document.getElementById('authStatus');
+const authModalTitle= document.getElementById('authModalTitle');
+const authUserEmail = document.getElementById('authUserEmail');
+const accountBtnLabel = document.getElementById('accountBtnLabel');
+let authMode = 'signin';
+
+if (!CLOUD_ENABLED){
+  document.getElementById('authNotConfigured').classList.remove('d-none');
+  authSubmitBtn.disabled = true;
+}
+
+function setAuthStatus(msg, isError){
+  authStatusEl.textContent = msg;
+  authStatusEl.style.color = isError ? '#F16A6A' : '#4CAF7D';
+}
+
+document.querySelectorAll('#authTabs .nav-link').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('#authTabs .nav-link').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    authMode = tab.dataset.tab;
+    authSubmitBtn.textContent = authMode === 'signin' ? 'تسجيل الدخول' : 'إنشاء الحساب';
+    authModalTitle.textContent = authMode === 'signin' ? 'تسجيل الدخول لمزامنة خطتك' : 'إنشاء حساب جديد';
+    setAuthStatus('', false);
+  });
+});
+
+authForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!CLOUD_ENABLED) return;
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
+  authSubmitBtn.disabled = true;
+  setAuthStatus('جارٍ التنفيذ…', false);
+
+  try{
+    if (authMode === 'signin'){
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      bootstrap.Modal.getOrCreateInstance(authModalEl).hide();
+    } else {
+      const { error } = await sb.auth.signUp({ email, password });
+      if (error) throw error;
+      setAuthStatus('تم إنشاء الحساب! إن كان تأكيد البريد مفعّلًا، تحقق من بريدك الإلكتروني قبل تسجيل الدخول.', false);
+    }
+  }catch(err){
+    setAuthStatus(err.message || 'حدث خطأ غير متوقع', true);
+  }finally{
+    authSubmitBtn.disabled = false;
+  }
+});
+
+document.getElementById('btnSignOut')?.addEventListener('click', async () => {
+  if (!CLOUD_ENABLED) return;
+  await sb.auth.signOut();
+  bootstrap.Modal.getOrCreateInstance(authModalEl).hide();
+});
+
+document.getElementById('btnSyncNow')?.addEventListener('click', async () => {
+  if (!currentUser) return;
+  setAuthStatus('', false);
+  await pushToCloud();
+  showToast('تمت المزامنة مع حسابك');
+});
+
+function updateAuthUI(){
+  if (currentUser){
+    authGuestPanel.classList.add('d-none');
+    authUserPanel.classList.remove('d-none');
+    authUserEmail.textContent = currentUser.email;
+    accountBtnLabel.textContent = currentUser.email;
+    document.getElementById('btnAccount').querySelector('i').className = 'bi bi-cloud-check me-1';
+  } else {
+    authGuestPanel.classList.remove('d-none');
+    authUserPanel.classList.add('d-none');
+    accountBtnLabel.textContent = 'تسجيل الدخول لمزامنة خطتك';
+    document.getElementById('btnAccount').querySelector('i').className = 'bi bi-cloud me-1';
+  }
+}
+
+async function initAuth(){
+  if (!CLOUD_ENABLED) { updateAuthUI(); return; }
+  const { data: { session } } = await sb.auth.getSession();
+  if (session){
+    currentUser = session.user;
+    await handlePostLogin();
+  }
+  updateAuthUI();
+
+  sb.auth.onAuthStateChange(async (event, session) => {
+    const wasLoggedIn = !!currentUser;
+    currentUser = session ? session.user : null;
+    updateAuthUI();
+    if (currentUser && !wasLoggedIn){
+      await handlePostLogin();
+      showToast(`مرحبًا! تم تسجيل الدخول كـ ${currentUser.email}`);
+    } else if (!currentUser && wasLoggedIn){
+      render();
+      showToast('تم تسجيل الخروج — عدنا إلى الوضع المحلي فقط');
+    }
+  });
+}
+
 /* ---------- التحميل الأولي ---------- */
 (function init(){
   const savedTrack = loadFromStorage();
@@ -572,6 +827,7 @@ trackFilter.addEventListener('change', () => { saveToStorage(trackFilter.value);
 
   trackFilter.value = savedTrack;
   render();
+  initAuth();
 })();
 </script>
 </body>
