@@ -609,3 +609,172 @@ footer.site-footer{
     pointer-events: auto;
   }
 }
+
+/* ---------- Shared-course clarity (subsections + inline badge) ---------- */
+.subgroup-label{
+  display:flex; align-items:center; gap:.4rem;
+  font-size:.78rem;
+  font-weight:800;
+  color: var(--text-1);
+  margin: .9rem 0 .6rem;
+}
+.subgroup-label .count{
+  color: var(--text-2);
+  font-weight:600;
+  font-size:.75rem;
+}
+.subgroup-label.subgroup-shared{
+  color: #B8C0CA;
+}
+.subgroup-label.subgroup-shared i{ color: var(--text-2); }
+
+.shared-with-row{
+  display:flex; flex-wrap:wrap; align-items:center; gap:.3rem;
+  font-size:.68rem;
+  color: var(--text-2);
+  margin-bottom:.5rem;
+}
+.shared-track-pill{
+  display:inline-flex; align-items:center; gap:.25rem;
+  padding:.05rem .4rem;
+  border-radius:999px;
+  border:1px solid var(--tc, var(--line));
+  color: var(--tc, var(--text-1));
+  font-size:.66rem;
+  font-weight:700;
+}
+
+/* ============================================================
+   Planner page (planner.html)
+   ============================================================ */
+.planner-card{ cursor:default; }
+.planner-card .status-btn-group{
+  display:flex; gap:.4rem;
+  margin-top:.6rem;
+  padding-top:.55rem;
+  border-top:1px dashed var(--line);
+}
+.status-btn{
+  flex:1;
+  display:flex; align-items:center; justify-content:center;
+  gap:.3rem;
+  padding:.35rem .3rem;
+  border-radius:7px;
+  border:1px solid var(--line);
+  background: var(--bg-3);
+  color: var(--text-2);
+  cursor:pointer;
+  font-size:.78rem;
+  transition: all .15s ease;
+}
+.status-btn:hover{ border-color: var(--sc); color: var(--sc); }
+.status-btn.active{
+  background: var(--sc);
+  border-color: var(--sc);
+  color: var(--bg-0);
+  font-weight:700;
+}
+.status-btn.locked{ opacity:.45; }
+.status-btn.locked:hover{ border-color: var(--line); color: var(--text-2); }
+
+.planner-card.status-passed{ opacity:.6; }
+.planner-card.status-passed .name{ text-decoration: line-through; text-decoration-color: #4CAF7D88; }
+.planner-card.status-inprogress{ box-shadow: 0 0 0 2px #F4B74088; }
+.planner-card.status-planned{ box-shadow: 0 0 0 2px #5C8DFF66; }
+.planner-card.status-eligible{ box-shadow: 0 0 0 2px #16A08599; }
+.planner-card.status-locked{ opacity:.55; filter: saturate(.6); }
+
+.eligible-badge{
+  display:inline-flex; align-items:center; gap:.3rem;
+  font-size:.68rem; font-weight:800;
+  color:#16A085;
+  background: rgba(22,160,133,.12);
+  border:1px solid rgba(22,160,133,.4);
+  border-radius:999px;
+  padding:.1rem .5rem;
+  margin-bottom:.4rem;
+  width: fit-content;
+}
+.missing-note{
+  margin-top:.5rem;
+  font-size:.7rem;
+  color: var(--text-2);
+  display:flex; align-items:flex-start; gap:.3rem;
+}
+.inline-grade{
+  display:flex; align-items:center; gap:.4rem;
+  margin-top:.5rem;
+  font-size:.75rem;
+  color: var(--text-2);
+}
+.inline-grade input{
+  width:4.5rem;
+  background: var(--bg-1);
+  border:1px solid var(--line);
+  border-radius:6px;
+  color: var(--text-0);
+  padding:.15rem .4rem;
+  font-family: var(--mono);
+}
+.status-print-label{ display:none; }
+
+.progress-track{
+  width:100%; height:.4rem;
+  background: var(--bg-3);
+  border-radius:999px;
+  margin-top:.5rem;
+  overflow:hidden;
+}
+.progress-fill{
+  height:100%;
+  background: linear-gradient(90deg, var(--accent), #16A085);
+  border-radius:999px;
+}
+
+.planner-toast{
+  position: fixed;
+  bottom: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+  color: var(--text-0);
+  padding: .6rem 1.1rem;
+  border-radius: 999px;
+  font-size: .85rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+  z-index: 2000;
+  box-shadow: 0 8px 24px -8px rgba(0,0,0,.5);
+}
+.planner-toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+
+/* ---------- Print styles (used for "طباعة / PDF") ---------- */
+@media print{
+  .no-print{ display:none !important; }
+  body{
+    background:#fff !important;
+    color:#111 !important;
+  }
+  :root{
+    --bg-0:#fff; --bg-1:#fff; --bg-2:#fff; --bg-3:#f3f3f3;
+    --line:#ccc; --text-0:#111; --text-1:#222; --text-2:#555;
+  }
+  .course-card, .stat-card, .info-card{
+    box-shadow:none !important;
+    border:1px solid #999 !important;
+    break-inside: avoid;
+  }
+  .status-btn-group{ display:none !important; }
+  .status-print-label{
+    display:inline-block !important;
+    margin-top:.5rem;
+    padding-top:.5rem;
+    border-top:1px dashed #999;
+    font-weight:700;
+    font-size:.8rem;
+  }
+  .course-grid{ grid-template-columns: repeat(3, 1fr) !important; }
+  section{ break-inside: avoid-page; }
+}

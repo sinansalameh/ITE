@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>مخطط أسبقيات المقررات — فرع الهندسة المعلوماتية (ITE)</title>
+<title>ITE Masar — مخطط أسبقيات المقررات (ITE)</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
   <div class="container">
     <div class="row align-items-center g-4">
       <div class="col-lg-8">
-        <div class="eyebrow">فرع الهندسة المعلوماتية — ITE</div>
+        <div class="eyebrow">ITE Masar — فرع الهندسة المعلوماتية</div>
         <h1>مخطط أسبقيات المقررات</h1>
         <p class="lead">
           خريطة تفاعلية لجميع المقررات العامة والأساسية ومسارات التخصص الستة، مع رقم
@@ -28,6 +28,10 @@
         </p>
       </div>
       <div class="col-lg-4 d-flex flex-column gap-2">
+        <a href="planner.html" class="plate text-decoration-none d-flex justify-content-between align-items-center" style="color:inherit">
+          <span><i class="bi bi-clipboard-check me-2" style="color:var(--accent)"></i>المخطط الدراسي الشخصي</span>
+          <i class="bi bi-arrow-left"></i>
+        </a>
         <a href="notes.html" class="plate text-decoration-none d-flex justify-content-between align-items-center" style="color:inherit">
           <span><i class="bi bi-journal-text me-2" style="color:var(--accent)"></i>ملاحظات ومعلومات البرنامج</span>
           <i class="bi bi-arrow-left"></i>
@@ -116,6 +120,8 @@
     <div class="d-flex flex-wrap justify-content-between gap-2">
       <span>مُعدّة اعتمادًا على قائمة المقررات الرسمية للبرنامج والنماذج الاسترشادية لكل مسار (svuonline.org).</span>
       <span>
+        <a href="planner.html" class="text-decoration-none" style="color:var(--accent)">المخطط الدراسي الشخصي</a>
+        ·
         <a href="notes.html" class="text-decoration-none" style="color:var(--accent)">ملاحظات ومعلومات البرنامج</a>
         ·
         <a href="feedback.html" class="text-decoration-none" style="color:var(--accent)">شاركنا ملاحظاتك ←</a>
@@ -192,6 +198,36 @@ for (let i = 1; i <= 10; i++) {
 }
 
 function trackColor(id){ return (TRACKS.find(t => t.id === id) || {}).color; }
+function trackLabel(id){ return (TRACKS.find(t => t.id === id) || {}).label || id; }
+
+// لون محايد يميّز المقررات المشتركة بين عدة مسارات عندما لا يكون هناك مسار واحد محدَّد
+const SHARED_NEUTRAL_COLOR = "#9AA5B1";
+
+/* يحدّد، حسب سياق التصفية الحالي (كل المسارات / مسار واحد بعينه):
+   - القسم (sectionId) الذي يجب أن تُصنَّف تحته البطاقة
+   - اللون الذي يجب أن تُلوَّن به
+   - المسارات الأخرى التي يشترك بها هذا المقرر (لعرضها كتنويه) */
+function courseDisplayMeta(course){
+  const val = trackFilter.value;
+  const singleTrack = (val !== 'all' && val !== 'foundation') ? val : null;
+  const isShared = course.tracks.length > 1;
+
+  if (singleTrack){
+    const sectionId = course.tracks.length === 0 ? course.category : ('track-' + singleTrack);
+    return {
+      sectionId,
+      color: CATEGORIES[sectionId].color,
+      isShared,
+      otherTracks: course.tracks.filter(t => t !== singleTrack),
+    };
+  }
+  return {
+    sectionId: course.category,
+    color: isShared ? SHARED_NEUTRAL_COLOR : CATEGORIES[course.category].color,
+    isShared,
+    otherTracks: course.tracks,
+  };
+}
 
 function currentTrackPredicate(){
   const val = trackFilter.value;
@@ -224,11 +260,15 @@ function displayTerm(course){
   return effectiveTerm(course, singleTrack);
 }
 
-function buildLegend(activeCategories){
-  legendEl.innerHTML = activeCategories.map(catId => {
+function buildLegend(activeCategories, hasSharedNeutral){
+  const chips = activeCategories.map(catId => {
     const cat = CATEGORIES[catId];
     return `<span class="chip"><span class="dot" style="background:${cat.color}"></span>${cat.label}</span>`;
-  }).join('');
+  });
+  if (hasSharedNeutral){
+    chips.push(`<span class="chip"><span class="dot" style="background:${SHARED_NEUTRAL_COLOR}"></span>مقرر مشترك بين عدة مسارات</span>`);
+  }
+  legendEl.innerHTML = chips.join('');
 }
 
 function render(){
@@ -244,64 +284,90 @@ function render(){
   if (!visible.length){
     sectionsWrap.innerHTML = '';
     emptyState.classList.remove('d-none');
-    buildLegend([]);
+    buildLegend([], false);
     renderStats([]);
     return;
   }
   emptyState.classList.add('d-none');
 
+  const metaMap = new Map(visible.map(c => [c.code, courseDisplayMeta(c)]));
+
   if (sortMode.value === 'term'){
-    renderByTerm(visible);
+    renderByTerm(visible, metaMap);
   } else {
-    renderByClassification(visible);
+    renderByClassification(visible, metaMap);
   }
 
   bindCardEvents();
   renderStats(visible);
 }
 
-function renderByClassification(visible){
+function renderByClassification(visible, metaMap){
+  const val = trackFilter.value;
+  const singleTrack = (val !== 'all' && val !== 'foundation') ? val : null;
+
   const byCat = {};
-  visible.forEach(c => (byCat[c.category] ||= []).push(c));
+  let anySharedNeutral = false;
+  visible.forEach(c => {
+    const m = metaMap.get(c.code);
+    if (!singleTrack && m.isShared) anySharedNeutral = true;
+    (byCat[m.sectionId] ||= []).push(c);
+  });
+
   const activeSections = SECTION_ORDER.filter(catId => byCat[catId] && byCat[catId].length);
-  buildLegend(activeSections);
+  buildLegend(activeSections, anySharedNeutral);
 
   sectionsWrap.innerHTML = activeSections.map(catId => {
     const cat = CATEGORIES[catId];
-    const isTrack = catId.startsWith('track-');
-    const cards = byCat[catId]
-      .slice()
-      .sort((a,b) => displayTerm(a) - displayTerm(b))
-      .map(c => courseCardHTML(c)).join('');
+    const isTrackSection = catId.startsWith('track-');
+    const list = byCat[catId].slice().sort((a,b) => displayTerm(a) - displayTerm(b));
+
+    let bodyHtml;
+    if (isTrackSection && singleTrack){
+      const exclusive = list.filter(c => c.tracks.length === 1);
+      const shared = list.filter(c => c.tracks.length > 1);
+      bodyHtml = `
+        ${exclusive.length ? `
+          <div class="subgroup-label">مقررات خاصة بهذا المسار<span class="count">(${exclusive.length})</span></div>
+          <div class="course-grid" data-cat="${catId}">${exclusive.map(c => courseCardHTML(c, metaMap.get(c.code))).join('')}</div>
+        ` : ''}
+        ${shared.length ? `
+          <div class="subgroup-label subgroup-shared"><i class="bi bi-link-45deg"></i> مقررات مشتركة مع مسارات أخرى<span class="count">(${shared.length})</span></div>
+          <div class="course-grid" data-cat="${catId}">${shared.map(c => courseCardHTML(c, metaMap.get(c.code))).join('')}</div>
+        ` : ''}
+      `;
+    } else {
+      bodyHtml = `<div class="course-grid" data-cat="${catId}">${list.map(c => courseCardHTML(c, metaMap.get(c.code))).join('')}</div>`;
+    }
+
     return `
       <section>
         <div class="section-title">
           <span class="bar" style="background:${cat.color}"></span>
           <h2>${cat.label}</h2>
-          <span class="count">(${byCat[catId].length})</span>
+          <span class="count">(${list.length})</span>
         </div>
-        <div class="${isTrack ? 'track-band' : ''}">
-          <div class="course-grid" data-cat="${catId}">${cards}</div>
-        </div>
+        <div class="${isTrackSection ? 'track-band' : ''}">${bodyHtml}</div>
       </section>`;
   }).join('');
 }
 
-function renderByTerm(visible){
+function renderByTerm(visible, metaMap){
   const byTerm = {};
   visible.forEach(c => {
     const t = displayTerm(c);
     (byTerm[t] ||= []).push(c);
   });
-  const catsPresent = new Set(visible.map(c => c.category));
-  buildLegend(SECTION_ORDER.filter(id => catsPresent.has(id)));
+  const catsPresent = new Set(visible.map(c => metaMap.get(c.code).sectionId));
+  const anySharedNeutral = trackFilter.value === 'all' && visible.some(c => c.tracks.length > 1);
+  buildLegend(SECTION_ORDER.filter(id => catsPresent.has(id)), anySharedNeutral);
 
   const terms = Object.keys(byTerm).map(Number).sort((a,b) => a-b);
   sectionsWrap.innerHTML = terms.map(t => {
     const cards = byTerm[t]
       .slice()
-      .sort((a,b) => a.category.localeCompare(b.category))
-      .map(c => courseCardHTML(c)).join('');
+      .sort((a,b) => metaMap.get(a.code).sectionId.localeCompare(metaMap.get(b.code).sectionId))
+      .map(c => courseCardHTML(c, metaMap.get(c.code))).join('');
     return `
       <section>
         <div class="section-title">
@@ -314,21 +380,26 @@ function renderByTerm(visible){
   }).join('');
 }
 
-function courseCardHTML(c){
-  const cat = CATEGORIES[c.category];
+function courseCardHTML(c, meta){
   const term = displayTerm(c);
   const prereqTags = c.prereq.length
     ? c.prereq.map(p => `<span class="tag">${p}</span>`).join('')
     : `<span style="color:var(--text-2)">لا يوجد متطلب سابق</span>`;
-  const trackDots = c.tracks.map(t => `<i style="background:${trackColor(t)}" title="${(TRACKS.find(x=>x.id===t)||{}).label||''}"></i>`).join('');
+
+  const sharedRow = (meta.otherTracks && meta.otherTracks.length)
+    ? `<div class="shared-with-row">
+         <i class="bi bi-link-45deg"></i> مشترك مع:
+         ${meta.otherTracks.map(t => `<span class="shared-track-pill" style="--tc:${trackColor(t)}">${trackLabel(t)}</span>`).join('')}
+       </div>`
+    : '';
 
   return `
     <a class="course-card" href="course.html?code=${encodeURIComponent(c.code)}" target="_blank" rel="noopener"
-       data-code="${c.code}" style="--cat:${cat.color}">
+       data-code="${c.code}" style="--cat:${meta.color}">
       <span class="rel-flag flag-prereq"><i class="bi bi-arrow-left-short"></i> متطلب سابق</span>
       <span class="rel-flag flag-dependent"><i class="bi bi-arrow-right-short"></i> يعتمد عليه</span>
       <div class="top-row">
-        <span class="code mono">${c.code}${trackDots ? `<span class="track-dots">${trackDots}</span>` : ''}</span>
+        <span class="code mono">${c.code}</span>
         <span class="end-group">
           <span class="pin-btn" role="button" tabindex="0" aria-pressed="false"
                 data-code="${c.code}" title="تثبيت إبراز هذا المقرر (يبقى ظاهرًا أثناء التمرير)">
@@ -339,6 +410,7 @@ function courseCardHTML(c){
         </span>
       </div>
       <div class="name">${c.name}</div>
+      ${sharedRow}
       <div class="prereq-row">${prereqTags}</div>
     </a>`;
 }

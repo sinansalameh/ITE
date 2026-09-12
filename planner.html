@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المخطط الدراسي الشخصي — ITE Masar</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.rtl.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===================== Header ===================== -->
+<header class="hero no-print">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-8">
+        <div class="eyebrow">ITE Masar — مسار</div>
+        <h1>المخطط الدراسي الشخصي</h1>
+        <p class="lead">
+          حدّد ما درسته حتى الآن، وسيُظهر لك المخطط تلقائيًا ما يمكنك تسجيله الآن، وما يبقى مقفلًا
+          إلى حين إنجاز متطلباته. تُحفظ خطتك في متصفحك تلقائيًا، ويمكنك أيضًا مشاركتها برابط أو
+          طباعتها كملخص.
+        </p>
+      </div>
+      <div class="col-lg-4 d-flex flex-column gap-2">
+        <a href="index.html" class="plate text-decoration-none d-flex justify-content-between align-items-center" style="color:inherit">
+          <span><i class="bi bi-diagram-3 me-2" style="color:var(--accent)"></i>المخطط المرجعي الكامل</span>
+          <i class="bi bi-arrow-left"></i>
+        </a>
+        <div class="plate d-flex justify-content-between align-items-center">
+          <span id="saveIndicator" style="color:var(--text-2);font-size:.85rem"><i class="bi bi-cloud-check me-1"></i> يُحفظ تلقائيًا في هذا المتصفح</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== Toolbar ===================== -->
+<div class="toolbar no-print">
+  <div class="container">
+    <div class="row g-2 align-items-end">
+      <div class="col-6 col-md-3">
+        <label class="small-label" for="trackFilter">المسار / التخصص</label>
+        <select id="trackFilter" class="form-select form-select-sm"></select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="small-label">&nbsp;</label>
+        <button id="btnShare" class="btn btn-sm btn-outline-blueprint w-100"><i class="bi bi-share me-1"></i> نسخ رابط المشاركة</button>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="small-label">&nbsp;</label>
+        <button id="btnPrint" class="btn btn-sm btn-outline-blueprint w-100"><i class="bi bi-printer me-1"></i> طباعة / PDF</button>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="small-label">&nbsp;</label>
+        <button id="btnGpa" class="btn btn-sm btn-blueprint w-100" data-bs-toggle="collapse" data-bs-target="#gpaPanel"><i class="bi bi-calculator me-1"></i> حاسبة المعدل</button>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="small-label">&nbsp;</label>
+        <button id="btnReset" class="btn btn-sm btn-outline-blueprint w-100" style="border-color:#F16A6A;color:#F16A6A"><i class="bi bi-trash3 me-1"></i> مسح الكل</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="container pb-5">
+
+  <!-- ===================== Summary stats ===================== -->
+  <div class="row g-3 mt-1" id="statsRow"></div>
+
+  <!-- ===================== GPA / Credit panel ===================== -->
+  <div class="collapse mt-3 no-print" id="gpaPanel">
+    <div class="info-card">
+      <h3><i class="bi bi-calculator" style="color:var(--accent)"></i> حاسبة المعدل التراكمي ونقاط التخرج</h3>
+      <p style="color:var(--text-2);font-size:.85rem" class="mb-3">
+        أدخل علامتك (من 100) لكل مقرر حددته كـ«ناجح» لحساب معدل تراكمي تقديري مرجّح بعدد النقاط المعتمدة.
+        هذا تقدير غير رسمي ولا يُعتمد بديلًا عن كشف العلامات الرسمي.
+      </p>
+      <div id="gradeInputsWrap" class="row g-2"></div>
+    </div>
+  </div>
+
+  <!-- ===================== Path-to-target estimator ===================== -->
+  <div class="mt-4 no-print">
+    <div class="info-card">
+      <h3><i class="bi bi-signpost-2" style="color:var(--accent)"></i> ما أقصر طريق لمقرر معيّن؟</h3>
+      <p style="color:var(--text-2);font-size:.85rem" class="mb-3">
+        اختر أي مقرر (مثلاً مقرر تخرج أو مقرر متقدم في مسارك) وسنعرض لك بالضبط سلسلة المتطلبات
+        السابقة المتبقية التي يجب إنجازها للوصول إليه، مرتبة حسب الفصل.
+      </p>
+      <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-8">
+          <select id="targetCourseSelect" class="form-select form-select-sm"></select>
+        </div>
+        <div class="col-12 col-md-4">
+          <button id="btnComputePath" class="btn btn-sm btn-blueprint w-100"><i class="bi bi-signpost-2 me-1"></i> احسب المسار المتبقي</button>
+        </div>
+      </div>
+      <div id="pathResult" class="mt-3"></div>
+    </div>
+  </div>
+
+  <!-- ===================== Legend ===================== -->
+  <div class="legend mt-4 no-print" id="statusLegend"></div>
+
+  <!-- ===================== Term sections ===================== -->
+  <div id="sectionsWrap" class="mt-2"></div>
+
+</main>
+
+<footer class="site-footer no-print">
+  <div class="container">
+    <div class="mb-2">
+      <strong style="color:var(--text-1)">كيف تعمل الحالات:</strong>
+      <span class="d-inline-flex align-items-center gap-1 mx-1"><i class="bi bi-square-fill" style="color:#4CAF7D"></i>ناجح</span>،
+      <span class="d-inline-flex align-items-center gap-1 mx-1"><i class="bi bi-square-fill" style="color:#F4B740"></i>قيد الدراسة</span>،
+      <span class="d-inline-flex align-items-center gap-1 mx-1"><i class="bi bi-square-fill" style="color:#5C8DFF"></i>مخطط له</span>،
+      <span class="d-inline-flex align-items-center gap-1 mx-1"><i class="bi bi-square-fill" style="color:#9AA5B1"></i>غير متاح بعد</span> —
+      يُعاد حساب الإتاحة تلقائيًا كلما غيّرت حالة أي مقرر.
+    </div>
+    <div class="d-flex flex-wrap justify-content-between gap-2">
+      <span>هذه الأداة مساعدة تقديرية ولا تُغني عن مراجعة الدائرة التعليمية أو النظام الرسمي للجامعة.</span>
+      <span>
+        <a href="notes.html" class="text-decoration-none" style="color:var(--accent)">ملاحظات ومعلومات البرنامج</a>
+        ·
+        <a href="feedback.html" class="text-decoration-none" style="color:var(--accent)">شاركنا ملاحظاتك</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<div id="toast" class="planner-toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="data.js"></script>
+<script>
+/* ============================================================
+   حالة المخطط الشخصي (تُحفظ في localStorage + قابلة للمشاركة عبر رابط)
+   ============================================================ */
+const LS_STATUS = 'itemasar_status_v1';
+const LS_GRADES = 'itemasar_grades_v1';
+const LS_TRACK  = 'itemasar_track_v1';
+const GRAD_TOTAL_CREDITS = 300;
+
+let statusMap = {};   // { code: 'planned' | 'inprogress' | 'passed' }
+let gradeMap  = {};   // { code: number 0-100 }
+
+const STATUS_META = {
+  planned:    { label: 'مخطط له',     icon:'bi-bookmark',          color:'#5C8DFF' },
+  inprogress: { label: 'قيد الدراسة', icon:'bi-hourglass-split',   color:'#F4B740' },
+  passed:     { label: 'ناجح',        icon:'bi-check-circle-fill', color:'#4CAF7D' },
+};
+
+function loadFromStorage(){
+  try{ statusMap = JSON.parse(localStorage.getItem(LS_STATUS) || '{}'); }catch(e){ statusMap = {}; }
+  try{ gradeMap  = JSON.parse(localStorage.getItem(LS_GRADES) || '{}'); }catch(e){ gradeMap = {}; }
+  return localStorage.getItem(LS_TRACK) || 'foundation';
+}
+
+function saveToStorage(trackVal){
+  localStorage.setItem(LS_STATUS, JSON.stringify(statusMap));
+  localStorage.setItem(LS_GRADES, JSON.stringify(gradeMap));
+  localStorage.setItem(LS_TRACK, trackVal);
+  showToast('تم حفظ تقدّمك في هذا المتصفح');
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* ---------- ترميز/فك ترميز رابط المشاركة ---------- */
+function encodeShareState(){
+  const sParts = Object.entries(statusMap).filter(([,s]) => s).map(([c,s]) => `${c}:${s[0].toUpperCase()}`);
+  const gParts = Object.entries(gradeMap).filter(([,g]) => g !== undefined && g !== null && g !== '').map(([c,g]) => `${c}=${g}`);
+  const raw = sParts.join(',') + '|' + gParts.join(',');
+  return btoa(raw);
+}
+function decodeShareState(str){
+  try{
+    const raw = atob(str);
+    const [sPart, gPart] = raw.split('|');
+    const sMap = {}, gMap = {};
+    const REV = { P:'passed', I:'inprogress', N:'planned' };
+    if (sPart) sPart.split(',').forEach(pair => {
+      const [c, s] = pair.split(':');
+      if (c && REV[s]) sMap[c] = REV[s];
+    });
+    if (gPart) gPart.split(',').forEach(pair => {
+      const [c, g] = pair.split('=');
+      if (c && g !== undefined) gMap[c] = Number(g);
+    });
+    return { statusMap: sMap, gradeMap: gMap };
+  }catch(e){ return null; }
+}
+
+/* ============================================================
+   منطق الأهلية والحسابات
+   ============================================================ */
+function earnedCredits(){
+  return COURSES.filter(c => statusMap[c.code] === 'passed').reduce((s,c) => s + c.credits, 0);
+}
+
+function computeGpa(){
+  let weighted = 0, creditSum = 0, missing = 0;
+  COURSES.forEach(c => {
+    if (statusMap[c.code] === 'passed'){
+      const g = gradeMap[c.code];
+      if (g !== undefined && g !== null && g !== '' && !isNaN(g)){
+        weighted += Number(g) * c.credits;
+        creditSum += c.credits;
+      } else if (c.credits > 0){
+        missing++;
+      }
+    }
+  });
+  return { avg: creditSum ? (weighted / creditSum) : null, missing };
+}
+
+function isEligible(course){
+  const prereqsOk = course.prereq.every(p => statusMap[p] === 'passed');
+  const creditOk = course.creditGate ? (earnedCredits() >= course.creditGate) : true;
+  return prereqsOk && creditOk;
+}
+
+function missingRequirements(course){
+  const missingPrereq = course.prereq.filter(p => statusMap[p] !== 'passed');
+  const items = missingPrereq.map(p => (COURSE_MAP[p] || {}).name || p);
+  if (course.creditGate && earnedCredits() < course.creditGate){
+    items.push(`${course.creditGate} وحدة معتمدة على الأقل (لديك حاليًا ${earnedCredits()})`);
+  }
+  return items;
+}
+
+/* ============================================================
+   واجهة الصفحة
+   ============================================================ */
+const trackFilter   = document.getElementById('trackFilter');
+const sectionsWrap  = document.getElementById('sectionsWrap');
+const statsRow      = document.getElementById('statsRow');
+const statusLegend  = document.getElementById('statusLegend');
+const gradeInputsWrap = document.getElementById('gradeInputsWrap');
+const targetCourseSelect = document.getElementById('targetCourseSelect');
+const pathResult = document.getElementById('pathResult');
+
+// تعبئة قائمة المسارات (نفس بنية الصفحة الرئيسية)
+const trackGroups = {};
+TRACKS.forEach(t => { (trackGroups[t.group] ||= []).push(t); });
+trackFilter.innerHTML = `
+  <option value="all">كل المقررات (الأساسية + كل المسارات)</option>
+  <option value="foundation">المقررات العامة والأساسية فقط</option>
+`;
+Object.entries(trackGroups).forEach(([group, list]) => {
+  const og = document.createElement('optgroup');
+  og.label = group;
+  list.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = t.label;
+    og.appendChild(opt);
+  });
+  trackFilter.appendChild(og);
+});
+
+// تعبئة قائمة اختيار "المقرر الهدف"
+targetCourseSelect.innerHTML = SECTION_ORDER.map(catId => {
+  const inCat = COURSES.filter(c => c.category === catId);
+  if (!inCat.length) return '';
+  return `<optgroup label="${CATEGORIES[catId].label}">
+    ${inCat.map(c => `<option value="${c.code}">${c.name} — ${c.code}</option>`).join('')}
+  </optgroup>`;
+}).join('');
+
+function currentTrackPredicate(){
+  const val = trackFilter.value;
+  return (course) => {
+    if (val === 'all') return true;
+    if (val === 'foundation') return course.tracks.length === 0;
+    return course.tracks.length === 0 || course.tracks.includes(val);
+  };
+}
+
+function courseDisplayMeta(course){
+  const val = trackFilter.value;
+  const singleTrack = (val !== 'all' && val !== 'foundation') ? val : null;
+  const isShared = course.tracks.length > 1;
+  if (singleTrack){
+    const sectionId = course.tracks.length === 0 ? course.category : ('track-' + singleTrack);
+    return { color: CATEGORIES[sectionId].color };
+  }
+  return { color: isShared ? '#9AA5B1' : CATEGORIES[course.category].color };
+}
+
+function displayTerm(course){
+  const val = trackFilter.value;
+  const singleTrack = (val !== 'all' && val !== 'foundation') ? val : null;
+  return effectiveTerm(course, singleTrack);
+}
+
+statusLegend.innerHTML = `
+  <span class="chip"><span class="dot" style="background:#4CAF7D"></span>ناجح</span>
+  <span class="chip"><span class="dot" style="background:#F4B740"></span>قيد الدراسة</span>
+  <span class="chip"><span class="dot" style="background:#5C8DFF"></span>مخطط له</span>
+  <span class="chip"><span class="dot" style="background:#16A085"></span>متاح الآن</span>
+  <span class="chip"><span class="dot" style="background:#9AA5B1"></span>غير متاح بعد</span>
+`;
+
+function render(){
+  const pred = currentTrackPredicate();
+  const visible = COURSES.filter(pred);
+
+  renderStats(visible);
+  renderGradeInputs();
+
+  const byTerm = {};
+  visible.forEach(c => { const t = displayTerm(c); (byTerm[t] ||= []).push(c); });
+  const terms = Object.keys(byTerm).map(Number).sort((a,b) => a-b);
+
+  sectionsWrap.innerHTML = terms.map(t => {
+    const cards = byTerm[t]
+      .slice()
+      .sort((a,b) => a.category.localeCompare(b.category))
+      .map(c => courseCardHTML(c)).join('');
+    return `
+      <section>
+        <div class="section-title">
+          <span class="bar" style="background:var(--accent)"></span>
+          <h2>الفصل ${TERM_LABELS[t]}</h2>
+          <span class="count">(${byTerm[t].length})</span>
+        </div>
+        <div class="course-grid">${cards}</div>
+      </section>`;
+  }).join('');
+
+  bindStatusButtons();
+  bindGradeInputs();
+}
+
+function courseCardHTML(course){
+  const meta = courseDisplayMeta(course);
+  const status = statusMap[course.code];
+  const eligible = isEligible(course);
+  const missing = missingRequirements(course);
+
+  let stateClass = '';
+  if (status === 'passed') stateClass = 'status-passed';
+  else if (status === 'inprogress') stateClass = 'status-inprogress';
+  else if (status === 'planned') stateClass = 'status-planned';
+  else if (eligible) stateClass = 'status-eligible';
+  else stateClass = 'status-locked';
+
+  const term = displayTerm(course);
+
+  const statusButtons = ['planned','inprogress','passed'].map(key => {
+    const meta2 = STATUS_META[key];
+    const active = status === key;
+    const locked = (key === 'passed' || key === 'inprogress') && !eligible && !active;
+    return `<button type="button" class="status-btn ${active ? 'active' : ''} ${locked ? 'locked' : ''}"
+        data-code="${course.code}" data-status="${key}" style="--sc:${meta2.color}"
+        title="${meta2.label}${locked ? ' — يتطلب إنجاز المتطلبات السابقة أولًا' : ''}">
+      <i class="bi ${meta2.icon}"></i>
+    </button>`;
+  }).join('');
+
+  const printLabel = status ? STATUS_META[status].label : (eligible ? 'متاح الآن' : 'غير متاح بعد');
+
+  const gradeInputInline = status === 'passed' ? `
+    <div class="inline-grade">
+      <label>العلامة:</label>
+      <input type="number" min="0" max="100" class="grade-input-inline" data-code="${course.code}"
+             value="${gradeMap[course.code] ?? ''}" placeholder="0-100">
+    </div>` : '';
+
+  const missingNote = (!status && !eligible && missing.length) ? `
+    <div class="missing-note"><i class="bi bi-lock-fill"></i> بانتظار: ${missing.join('، ')}</div>` : '';
+
+  const eligibleBadge = (!status && eligible) ? `<span class="eligible-badge"><i class="bi bi-unlock-fill"></i> متاح الآن</span>` : '';
+
+  return `
+    <div class="course-card planner-card ${stateClass}" style="--cat:${meta.color}" data-code="${course.code}">
+      <div class="top-row">
+        <span class="code mono">${course.code}</span>
+        <span class="end-group">
+          <span class="term-badge">ف${term}</span>
+          <span class="credits mono">${course.credits} نقطة</span>
+        </span>
+      </div>
+      <div class="name">${course.name}</div>
+      ${eligibleBadge}
+      <div class="status-btn-group">${statusButtons}</div>
+      <div class="status-print-label">${printLabel}</div>
+      ${gradeInputInline}
+      ${missingNote}
+    </div>`;
+}
+
+function bindStatusButtons(){
+  document.querySelectorAll('.status-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const code = btn.dataset.code;
+      const key = btn.dataset.status;
+      const course = COURSE_MAP[code];
+      const isActive = statusMap[code] === key;
+      const wouldBeLocked = (key === 'passed' || key === 'inprogress') && !isEligible(course) && !isActive;
+
+      if (wouldBeLocked){
+        const missing = missingRequirements(course);
+        const ok = confirm(`لم تُنجَز بعد كل متطلبات «${course.name}» وفق ما أدخلته (${missing.join('، ') || 'غير معروف'}).\nهل تريد تحديدها كـ«${STATUS_META[key].label}» رغم ذلك؟`);
+        if (!ok) return;
+      }
+
+      statusMap[code] = isActive ? undefined : key;
+      if (statusMap[code] === undefined) delete statusMap[code];
+      saveToStorage(trackFilter.value);
+      render();
+    });
+  });
+}
+
+function bindGradeInputs(){
+  document.querySelectorAll('.grade-input-inline').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const code = inp.dataset.code;
+      const v = inp.value;
+      if (v === '') delete gradeMap[code];
+      else gradeMap[code] = Math.max(0, Math.min(100, Number(v)));
+      saveToStorage(trackFilter.value);
+      renderStats(COURSES.filter(currentTrackPredicate()));
+      renderGradeInputs();
+    });
+  });
+}
+
+function renderGradeInputs(){
+  const passedNoGrade = COURSES.filter(c => statusMap[c.code] === 'passed');
+  if (!passedNoGrade.length){
+    gradeInputsWrap.innerHTML = `<div class="chain-panel-empty">لم تُحدَّد أي مقررات كـ«ناجح» بعد.</div>`;
+    return;
+  }
+  gradeInputsWrap.innerHTML = passedNoGrade.map(c => `
+    <div class="col-6 col-md-4 col-lg-3">
+      <label class="small-label">${c.name} <span class="mono" style="color:var(--text-2)">(${c.code})</span></label>
+      <input type="number" min="0" max="100" class="form-control form-control-sm grade-input-inline"
+             data-code="${c.code}" value="${gradeMap[c.code] ?? ''}" placeholder="0-100">
+    </div>
+  `).join('');
+  bindGradeInputs();
+}
+
+function renderStats(visible){
+  const earned = earnedCredits();
+  const remaining = Math.max(0, GRAD_TOTAL_CREDITS - earned);
+  const pct = Math.min(100, Math.round((earned / GRAD_TOTAL_CREDITS) * 100));
+  const gpa = computeGpa();
+  const gpaText = gpa.avg !== null ? gpa.avg.toFixed(1) : '—';
+
+  statsRow.innerHTML = `
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="num mono">${earned}</div>
+        <div class="label">نقطة معتمدة مكتسبة</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="num mono">${remaining}</div>
+        <div class="label">نقطة متبقية للتخرج (من ${GRAD_TOTAL_CREDITS})</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="num mono">${pct}%</div>
+        <div class="label">نسبة الإنجاز</div>
+        <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="num mono">${gpaText}</div>
+        <div class="label">المعدل التراكمي التقديري (من 100)${gpa.missing ? `<br><span style="color:#F4B740">${gpa.missing} مقرر بلا علامة</span>` : ''}</div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- مسار الوصول إلى هدف ---------- */
+document.getElementById('btnComputePath').addEventListener('click', () => {
+  const code = targetCourseSelect.value;
+  const target = COURSE_MAP[code];
+  if (!target) return;
+
+  const ancestors = Array.from(getAncestors(code));
+  let remaining = ancestors.filter(a => statusMap[a] !== 'passed');
+  if (statusMap[code] !== 'passed') remaining.push(code);
+
+  remaining = Array.from(new Set(remaining)).sort((a,b) => (COURSE_MAP[a].term||0) - (COURSE_MAP[b].term||0));
+
+  if (!remaining.length){
+    pathResult.innerHTML = `<div class="alert alert-success mb-0">لقد أنجزت بالفعل «${target.name}» أو كل متطلباته!</div>`;
+    return;
+  }
+
+  pathResult.innerHTML = `
+    <div class="mb-2" style="color:var(--text-1)">
+      يتبقى <strong style="color:var(--accent)">${remaining.length}</strong> مقرر للوصول إلى
+      «<strong>${target.name}</strong>» (بما فيه المقرر نفسه إن لم يُنجَز بعد):
+    </div>
+    <ul class="rel-list">
+      ${remaining.map(code => {
+        const c = COURSE_MAP[code];
+        const st = statusMap[code];
+        const stLabel = st ? STATUS_META[st].label : `الفصل ${TERM_LABELS[c.term]}`;
+        return `<a href="course.html?code=${encodeURIComponent(code)}" target="_blank" rel="noopener" style="--accent:${st ? STATUS_META[st].color : 'var(--accent)'}">
+            <span>${c.name}</span>
+            <span class="rel-code mono">${code} · ${stLabel}</span>
+          </a>`;
+      }).join('')}
+    </ul>
+  `;
+});
+
+/* ---------- أزرار عامة ---------- */
+document.getElementById('btnReset').addEventListener('click', () => {
+  if (!confirm('سيؤدي هذا إلى مسح كل التقدّم المحفوظ في هذا المتصفح (الحالات والعلامات). متابعة؟')) return;
+  statusMap = {};
+  gradeMap = {};
+  saveToStorage(trackFilter.value);
+  render();
+});
+
+document.getElementById('btnPrint').addEventListener('click', () => window.print());
+
+document.getElementById('btnShare').addEventListener('click', async () => {
+  const url = `${location.origin}${location.pathname}?plan=${encodeShareState()}`;
+  try{
+    await navigator.clipboard.writeText(url);
+    showToast('تم نسخ رابط المشاركة إلى الحافظة');
+  }catch(e){
+    prompt('انسخ هذا الرابط لمشاركة خطتك:', url);
+  }
+});
+
+trackFilter.addEventListener('change', () => { saveToStorage(trackFilter.value); render(); });
+
+/* ---------- التحميل الأولي ---------- */
+(function init(){
+  const savedTrack = loadFromStorage();
+
+  const params = new URLSearchParams(location.search);
+  const planParam = params.get('plan');
+  if (planParam){
+    const decoded = decodeShareState(planParam);
+    if (decoded){
+      const hasExisting = Object.keys(statusMap).length > 0;
+      const proceed = !hasExisting || confirm('تم العثور على خطة مشتركة عبر الرابط. سيؤدي تحميلها إلى استبدال تقدّمك المحفوظ حاليًا في هذا المتصفح. هل تريد المتابعة؟');
+      if (proceed){
+        statusMap = decoded.statusMap;
+        gradeMap = decoded.gradeMap;
+        saveToStorage(savedTrack);
+      }
+    }
+    // إزالة المعامل من العنوان بعد المعالجة
+    history.replaceState({}, '', location.pathname);
+  }
+
+  trackFilter.value = savedTrack;
+  render();
+})();
+</script>
+</body>
+</html>
