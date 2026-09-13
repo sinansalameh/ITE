@@ -157,10 +157,7 @@
             <li class="nav-item"><button class="nav-link" data-tab="signup" type="button">حساب جديد</button></li>
           </ul>
 
-          <div id="authNotConfigured" class="alert alert-warning d-none">
-            المزامنة السحابية لم تُفعَّل بعد على هذا الموقع. راجع ملف
-            <code>README-supabase.txt</code> لإكمال الإعداد (خطوة واحدة من صاحب الموقع، وليست منك).
-          </div>
+          <div id="authNotConfigured" class="alert alert-warning d-none"></div>
 
           <form id="authForm">
             <div class="mb-2">
@@ -209,8 +206,21 @@
    ============================================================ */
 const SUPABASE_URL = "https://eokvxgpqrwipernnpmpm.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVva3Z4Z3BxcndpcGVybm5wbXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyNDU2NjQsImV4cCI6MjEwNDgyMTY2NH0._jzqe0sHNLCEfQdkOEBKkq5jWxFFI4LLfhYEANRhzNM";
-const CLOUD_ENABLED = !SUPABASE_URL.includes('REPLACE_WITH') && !SUPABASE_ANON_KEY.includes('REPLACE_WITH');
-const sb = CLOUD_ENABLED ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+const SUPABASE_CONFIGURED = !SUPABASE_URL.includes('REPLACE_WITH') && !SUPABASE_ANON_KEY.includes('REPLACE_WITH');
+let CLOUD_ENABLED = false;
+let sb = null;
+if (SUPABASE_CONFIGURED){
+  try{
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    CLOUD_ENABLED = true;
+  }catch(err){
+    // خطأ في القيمتين (رابط غير صالح مثلاً) لا يجب أن يوقف بقية الصفحة —
+    // نستمر بوضع محلي فقط، ونطبع تفاصيل الخطأ في الـ Console للمطوّر.
+    console.error('تعذّر تفعيل المزامنة السحابية — تحقق من SUPABASE_URL وSUPABASE_ANON_KEY في planner.html:', err);
+    CLOUD_ENABLED = false;
+    sb = null;
+  }
+}
 
 let currentUser = null;
 let cloudPushTimer = null;
@@ -708,7 +718,11 @@ const accountBtnLabel = document.getElementById('accountBtnLabel');
 let authMode = 'signin';
 
 if (!CLOUD_ENABLED){
-  document.getElementById('authNotConfigured').classList.remove('d-none');
+  const warnEl = document.getElementById('authNotConfigured');
+  warnEl.textContent = SUPABASE_CONFIGURED
+    ? 'تم إدخال بيانات Supabase، لكن الاتصال فشل (تحقّق من صحة SUPABASE_URL وSUPABASE_ANON_KEY في planner.html — راجع Console للتفاصيل، وتأكد أنهما لم يُعكَسا بالخطأ).'
+    : 'المزامنة السحابية لم تُفعَّل بعد على هذا الموقع. راجع ملف README-supabase.txt لإكمال الإعداد (خطوة واحدة من صاحب الموقع، وليست منك).';
+  warnEl.classList.remove('d-none');
   authSubmitBtn.disabled = true;
 }
 
