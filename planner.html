@@ -206,6 +206,13 @@
    ============================================================ */
 const SUPABASE_URL = "https://eokvxgpqrwipernnpmpm.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVva3Z4Z3BxcndpcGVybm5wbXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyNDU2NjQsImV4cCI6MjEwNDgyMTY2NH0._jzqe0sHNLCEfQdkOEBKkq5jWxFFI4LLfhYEANRhzNM";
+
+// اترك هذا فارغًا "" إن لم تُفعِّل قيد النطاق الجامعي في قاعدة البيانات.
+// إن فعّلته عبر supabase-schema-email-domain.sql، ضع هنا نفس النطاق
+// تمامًا حرفًا بحرف (يجب أن يبدأ بـ @) حتى تتطابق الرسالة الظاهرة
+// للطالب مع القيد الفعلي المطبَّق على الخادم.
+const ALLOWED_EMAIL_DOMAIN = "@svuonline.org";
+
 const SUPABASE_CONFIGURED = !SUPABASE_URL.includes('REPLACE_WITH') && !SUPABASE_ANON_KEY.includes('REPLACE_WITH');
 let CLOUD_ENABLED = false;
 let sb = null;
@@ -747,6 +754,14 @@ authForm.addEventListener('submit', async (e) => {
   if (!CLOUD_ENABLED) return;
   const email = authEmail.value.trim();
   const password = authPassword.value;
+
+  // تحقّق فوري من نطاق البريد قبل الاتصال بالخادم أصلًا — يجب أن تطابق
+  // القيمة هنا تمامًا ما وضعته في supabase-schema-email-domain.sql
+  if (authMode === 'signup' && ALLOWED_EMAIL_DOMAIN && !email.toLowerCase().endsWith(ALLOWED_EMAIL_DOMAIN.toLowerCase())){
+    setAuthStatus(`التسجيل مقتصر على البريد الجامعي فقط (ينتهي بـ ${ALLOWED_EMAIL_DOMAIN})`, true);
+    return;
+  }
+
   authSubmitBtn.disabled = true;
   setAuthStatus('جارٍ التنفيذ…', false);
 
@@ -761,7 +776,13 @@ authForm.addEventListener('submit', async (e) => {
       setAuthStatus('تم إنشاء الحساب! إن كان تأكيد البريد مفعّلًا، تحقق من بريدك الإلكتروني قبل تسجيل الدخول.', false);
     }
   }catch(err){
-    setAuthStatus(err.message || 'حدث خطأ غير متوقع', true);
+    let msg = err.message || 'حدث خطأ غير متوقع';
+    if (/database error saving new user/i.test(msg)){
+      msg = ALLOWED_EMAIL_DOMAIN
+        ? `تعذّر إنشاء الحساب. تأكد أن بريدك ينتهي فعليًا بـ ${ALLOWED_EMAIL_DOMAIN}، أو حاول لاحقًا.`
+        : 'تعذّر إنشاء الحساب لسبب غير متوقع في الخادم. حاول لاحقًا أو تواصل معنا.';
+    }
+    setAuthStatus(msg, true);
   }finally{
     authSubmitBtn.disabled = false;
   }
