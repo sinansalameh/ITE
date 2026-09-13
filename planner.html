@@ -204,8 +204,8 @@
    حتى لو لم تُملأ القيمتان أدناه؛ تسجيل الدخول اختياري تمامًا ويضيف
    فقط إمكانية فتح نفس الخطة من جهاز آخر.
    ============================================================ */
-const SUPABASE_URL = "https://eokvxgpqrwipernnpmpm.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVva3Z4Z3BxcndpcGVybm5wbXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyNDU2NjQsImV4cCI6MjEwNDgyMTY2NH0._jzqe0sHNLCEfQdkOEBKkq5jWxFFI4LLfhYEANRhzNM";
+const SUPABASE_URL = "REPLACE_WITH_SUPABASE_URL";
+const SUPABASE_ANON_KEY = "REPLACE_WITH_SUPABASE_ANON_KEY";
 
 // اترك هذا فارغًا "" إن لم تُفعِّل قيد النطاق الجامعي في قاعدة البيانات.
 // إن فعّلته عبر supabase-schema-email-domain.sql، ضع هنا نفس النطاق
@@ -324,15 +324,30 @@ function computeGpa(){
   return { avg: creditSum ? (weighted / creditSum) : null, missing };
 }
 
+// وفق نظام الجامعة: يكفي أن يكون الطالب قد سجّل مقررًا سابقًا (حتى لو لم
+// ينجح فيه بعد) ليصبح مؤهّلاً لتسجيل المقررات التي تتطلبه. لذلك "قيد
+// الدراسة" تكفي هنا تمامًا مثل "ناجح" — أما "مخطط له" فهي مجرد نية لم
+// تتحقق بعد، فلا تكفي.
+const REGISTERED_STATUSES = ['inprogress', 'passed'];
+function isRegistered(code){ return REGISTERED_STATUSES.includes(statusMap[code]); }
+
 function isEligible(course){
-  const prereqsOk = course.prereq.every(p => statusMap[p] === 'passed');
+  const prereqsOk = course.prereq.every(p => isRegistered(p));
   const creditOk = course.creditGate ? (earnedCredits() >= course.creditGate) : true;
-  return prereqsOk && creditOk;
+  // مقررات المخابر (مثل مخبر نظم التشغيل) تشترط أيضًا أن يكون المقرر
+  // النظري المقترن بها مسجَّلًا بالتوازي (وليس بالضرورة ناجحًا فيه)
+  const concurrentOk = course.concurrent ? course.concurrent.every(c => isRegistered(c)) : true;
+  return prereqsOk && creditOk && concurrentOk;
 }
 
 function missingRequirements(course){
-  const missingPrereq = course.prereq.filter(p => statusMap[p] !== 'passed');
+  const missingPrereq = course.prereq.filter(p => !isRegistered(p));
   const items = missingPrereq.map(p => (COURSE_MAP[p] || {}).name || p);
+  if (course.concurrent){
+    course.concurrent.forEach(c => {
+      if (!isRegistered(c)) items.push(`تسجيل «${(COURSE_MAP[c] || {}).name || c}» بالتوازي`);
+    });
+  }
   if (course.creditGate && earnedCredits() < course.creditGate){
     items.push(`${course.creditGate} وحدة معتمدة على الأقل (لديك حاليًا ${earnedCredits()})`);
   }
@@ -512,7 +527,7 @@ function bindStatusButtons(){
 
       if (wouldBeLocked){
         const missing = missingRequirements(course);
-        const ok = confirm(`لم تُنجَز بعد كل متطلبات «${course.name}» وفق ما أدخلته (${missing.join('، ') || 'غير معروف'}).\nهل تريد تحديدها كـ«${STATUS_META[key].label}» رغم ذلك؟`);
+        const ok = confirm(`وفق ما أدخلته، لم تُسجَّل بعد كل متطلبات «${course.name}» (${missing.join('، ') || 'غير معروف'}).\nهل تريد تحديدها كـ«${STATUS_META[key].label}» رغم ذلك؟`);
         if (!ok) return;
       }
 

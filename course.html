@@ -88,7 +88,7 @@ if (!course){
   if (course.creditGate) extraReq.push(`يشترط الحصول على ${course.creditGate} وحدة معتمدة على الأقل قبل التسجيل بهذا المقرر.`);
   if (course.concurrent && course.concurrent.length){
     const names = course.concurrent.map(cd => (COURSE_MAP[cd]||{}).name || cd).join('، ');
-    extraReq.push(`يُنزَّل بالتوازي مع: ${names} (وليس كمتطلب سابق له).`);
+    extraReq.push(`يشترط تسجيل المقرر النظري بالتوازي معه (وليس بالضرورة النجاح فيه): ${names}. كما يخضع لنفس المتطلبات السابقة الخاصة بذلك المقرر.`);
   }
 
   app.innerHTML = `
