@@ -96,12 +96,13 @@
 
 <script>
 /* ============================================================
-   إرسال النموذج عبر Formspree — لا يظهر أي بريد إلكتروني للزائر.
-   يجب استبدال FORM_ENDPOINT أدناه بمُعرّف النموذج الخاص بك بعد
-   التسجيل المجاني على https://formspree.io (انظر التعليمات في
-   ملف README-feedback.txt المرفق).
+   إرسال النموذج عبر قناتين اختياريتين ومستقلتين — يكفي تفعيل واحدة:
+   1) Formspree (بريد إلكتروني) — راجع README-feedback.txt
+   2) تلغرام عبر دالة Supabase الوسيطة — راجع README-telegram-bot.txt
+   لا يظهر أي بريد إلكتروني أو توكن بوت لأي زائر في أي من الحالتين.
    ============================================================ */
 const FORM_ENDPOINT = "https://formspree.io/f/xoeqoapg";
+const TELEGRAM_FUNCTION_URL = "https://supabase.com/dashboard/project/eokvxgpqrwipernnpmpm/functions/telegram-feedback";
 
 const form = document.getElementById('feedbackForm');
 const statusBox = document.getElementById('fbStatus');
@@ -110,10 +111,13 @@ const submitBtn = document.getElementById('fbSubmit');
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  if (FORM_ENDPOINT.includes('REPLACE_WITH_YOUR_FORM_ID')) {
+  const formspreeConfigured = !FORM_ENDPOINT.includes('REPLACE_WITH');
+  const telegramConfigured = !TELEGRAM_FUNCTION_URL.includes('REPLACE_WITH');
+
+  if (!formspreeConfigured && !telegramConfigured) {
     statusBox.innerHTML = `<div class="alert alert-warning mb-0">
-      لم يتم ربط النموذج بعد بخدمة الإرسال. يرجى مراجعة ملف
-      <code>README-feedback.txt</code> لإكمال الإعداد (خطوة واحدة بسيطة).
+      لم يتم ربط النموذج بأي وسيلة إرسال بعد. راجع ملف
+      <code>README-feedback.txt</code> أو <code>README-telegram-bot.txt</code> لإكمال الإعداد.
     </div>`;
     return;
   }
@@ -121,29 +125,53 @@ form.addEventListener('submit', async (e) => {
   submitBtn.disabled = true;
   submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> جارٍ الإرسال…`;
 
-  try {
-    const res = await fetch(FORM_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Accept': 'application/json' },
-      body: new FormData(form),
-    });
+  const payload = {
+    type: document.getElementById('fbType').value,
+    courseCode: document.getElementById('fbCourse').value,
+    message: document.getElementById('fbMessage').value,
+    name: document.getElementById('fbName').value,
+    email: document.getElementById('fbEmail').value,
+    _gotcha: form.querySelector('[name="_gotcha"]').value,
+  };
 
-    if (res.ok) {
-      form.reset();
-      statusBox.innerHTML = `<div class="alert alert-success mb-0">
-        <i class="bi bi-check-circle me-1"></i> شكرًا لك! تم إرسال ملاحظتك بنجاح.
-      </div>`;
-    } else {
-      throw new Error('bad response');
-    }
-  } catch (err) {
+  const attempts = [];
+
+  if (formspreeConfigured) {
+    attempts.push(
+      fetch(FORM_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' },
+        body: new FormData(form),
+      }).then(res => res.ok).catch(() => false)
+    );
+  }
+
+  if (telegramConfigured) {
+    attempts.push(
+      fetch(TELEGRAM_FUNCTION_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).then(res => res.ok).catch(() => false)
+    );
+  }
+
+  const results = await Promise.all(attempts);
+  const anySucceeded = results.some(Boolean);
+
+  if (anySucceeded) {
+    form.reset();
+    statusBox.innerHTML = `<div class="alert alert-success mb-0">
+      <i class="bi bi-check-circle me-1"></i> شكرًا لك! تم إرسال ملاحظتك بنجاح.
+    </div>`;
+  } else {
     statusBox.innerHTML = `<div class="alert alert-danger mb-0">
       حدث خطأ أثناء الإرسال. حاول مرة أخرى لاحقًا.
     </div>`;
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = `<i class="bi bi-send me-1"></i> إرسال الملاحظة`;
   }
+
+  submitBtn.disabled = false;
+  submitBtn.innerHTML = `<i class="bi bi-send me-1"></i> إرسال الملاحظة`;
 });
 </script>
 </body>
