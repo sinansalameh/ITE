@@ -87,7 +87,13 @@
         <div id="resultCount" class="pill">— نتيجة</div>
       </div>
     </div>
-    <div class="legend mt-3" id="legend"></div>
+    <button type="button" class="legend-toggle mt-3" id="legendToggle" aria-expanded="false" aria-controls="legendCollapse">
+      <span><i class="bi bi-palette me-1"></i> دليل الألوان</span>
+      <i class="bi bi-chevron-down legend-chevron"></i>
+    </button>
+    <div class="collapse" id="legendCollapse">
+      <div class="legend mt-2" id="legend"></div>
+    </div>
   </div>
 </div>
 
@@ -612,6 +618,31 @@ sortMode.addEventListener('change', render);
 trackFilter.addEventListener('change', render);
 termFilter.addEventListener('change', render);
 searchBox.addEventListener('input', render);
+
+/* ---------- طيّ/فتح دليل الألوان — مطوي افتراضيًا على الجوال ---------- */
+const LS_LEGEND_OPEN = 'itemasar_legend_open';
+const legendToggleBtn = document.getElementById('legendToggle');
+const legendCollapseEl = document.getElementById('legendCollapse');
+const legendCollapseInst = new bootstrap.Collapse(legendCollapseEl, { toggle: false });
+
+(function initLegendState(){
+  const saved = localStorage.getItem(LS_LEGEND_OPEN);
+  const shouldOpen = saved !== null ? (saved === 'true') : (window.innerWidth >= 768);
+  if (shouldOpen){
+    legendCollapseEl.classList.add('show');
+    legendToggleBtn.setAttribute('aria-expanded', 'true');
+  }
+})();
+
+legendCollapseEl.addEventListener('shown.bs.collapse', () => {
+  legendToggleBtn.setAttribute('aria-expanded', 'true');
+  localStorage.setItem(LS_LEGEND_OPEN, 'true');
+});
+legendCollapseEl.addEventListener('hidden.bs.collapse', () => {
+  legendToggleBtn.setAttribute('aria-expanded', 'false');
+  localStorage.setItem(LS_LEGEND_OPEN, 'false');
+});
+legendToggleBtn.addEventListener('click', () => legendCollapseInst.toggle());
 
 render();
 </script>

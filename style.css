@@ -107,6 +107,25 @@ body{
 }
 .legend .dot{ width:.55rem; height:.55rem; border-radius:50%; flex:none; }
 
+.legend-toggle{
+  display:flex; align-items:center; justify-content:space-between;
+  width:100%;
+  background: var(--bg-2);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:.5rem .8rem;
+  color: var(--text-1);
+  font-size:.85rem;
+  font-weight:700;
+  cursor:pointer;
+}
+.legend-toggle:hover{ border-color: var(--accent); color: var(--text-0); }
+.legend-toggle .legend-chevron{
+  transition: transform .2s ease;
+  color: var(--text-2);
+}
+.legend-toggle[aria-expanded="true"] .legend-chevron{ transform: rotate(180deg); }
+
 /* ---------- Section ---------- */
 .section-title{
   display:flex; align-items:center; gap:.6rem;
