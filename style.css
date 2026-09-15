@@ -708,9 +708,55 @@ footer.site-footer{
 .planner-card.status-passed{ opacity:.6; }
 .planner-card.status-passed .name{ text-decoration: line-through; text-decoration-color: #4CAF7D88; }
 .planner-card.status-inprogress{ box-shadow: 0 0 0 2px #F4B74088; }
+.planner-card.status-failed{ box-shadow: 0 0 0 2px #F16A6A99; opacity:.8; }
 .planner-card.status-planned{ box-shadow: 0 0 0 2px #5C8DFF66; }
 .planner-card.status-eligible{ box-shadow: 0 0 0 2px #16A08599; }
 .planner-card.status-locked{ opacity:.55; filter: saturate(.6); }
+
+/* شارة حالة للقراءة فقط (بديل أزرار الحالة القديمة — النقر على البطاقة يفتح نافذة التفاصيل الآن) */
+.status-pill{
+  display:inline-flex; align-items:center; gap:.3rem;
+  font-size:.7rem; font-weight:700;
+  color: var(--sc);
+  background: color-mix(in srgb, var(--sc) 15%, transparent);
+  border:1px solid color-mix(in srgb, var(--sc) 45%, transparent);
+  border-radius:999px;
+  padding:.15rem .55rem;
+}
+.lock-badge{
+  display:inline-flex; align-items:center;
+  font-size:.7rem;
+  color: var(--text-2);
+  padding:.15rem .4rem;
+}
+.planned-toggle{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:1.6rem; height:1.6rem;
+  border-radius:6px;
+  color: var(--text-2);
+  border:1px solid var(--line);
+  background: var(--bg-3);
+  cursor:pointer;
+  flex:none;
+}
+.planned-toggle:hover{ color:var(--accent); border-color:var(--accent); }
+.planned-toggle.active{ color:#5C8DFF; border-color:#5C8DFF; background:rgba(92,141,255,.12); }
+
+/* ---------- سجل محاولات المقرر (داخل نافذة التفاصيل) ---------- */
+.attempt-history{ display:flex; flex-direction:column; gap:.5rem; }
+.attempt-row{
+  display:flex; justify-content:space-between; align-items:center; gap:.6rem;
+  background: var(--bg-3);
+  border:1px solid var(--line);
+  border-inline-start:3px solid var(--sc);
+  border-radius:8px;
+  padding:.6rem .75rem;
+}
+
+/* ---------- جدول السجل الأكاديمي القابل للطباعة ---------- */
+.list-view-table{ color: var(--text-1); }
+.list-view-table thead th{ color: var(--text-2); font-weight:700; font-size:.78rem; }
+.list-view-table td, .list-view-table th{ border-color: var(--line) !important; vertical-align:middle; }
 
 .eligible-badge{
   display:inline-flex; align-items:center; gap:.3rem;
