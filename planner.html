@@ -223,7 +223,7 @@ if (SUPABASE_CONFIGURED){
   }catch(err){
     // خطأ في القيمتين (رابط غير صالح مثلاً) لا يجب أن يوقف بقية الصفحة —
     // نستمر بوضع محلي فقط، ونطبع تفاصيل الخطأ في الـ Console للمطوّر.
-    console.error('تعذّر تفعيل المزامنة السحابية — تحقق من SUPABASE_URL وSUPABASE_ANON_KEY في planner.html:', err);
+    console.error('خدمة المزامنة السحابية قيد التطوير', err);
     CLOUD_ENABLED = false;
     sb = null;
   }
