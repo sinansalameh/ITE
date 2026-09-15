@@ -87,10 +87,12 @@
         <div id="resultCount" class="pill">— نتيجة</div>
       </div>
     </div>
-    <button type="button" class="legend-toggle mt-3" id="legendToggle" aria-expanded="false" aria-controls="legendCollapse">
-      <span><i class="bi bi-palette me-1"></i> دليل الألوان</span>
-      <i class="bi bi-chevron-down legend-chevron"></i>
-    </button>
+    <div class="legend-mini-row">
+      <button type="button" class="legend-mini-toggle" id="legendToggle" aria-expanded="false"
+              aria-controls="legendCollapse" aria-label="دليل الألوان" title="دليل الألوان">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+    </div>
     <div class="collapse" id="legendCollapse">
       <div class="legend mt-2" id="legend"></div>
     </div>

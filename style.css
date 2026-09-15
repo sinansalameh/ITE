@@ -107,24 +107,33 @@ body{
 }
 .legend .dot{ width:.55rem; height:.55rem; border-radius:50%; flex:none; }
 
-.legend-toggle{
-  display:flex; align-items:center; justify-content:space-between;
-  width:100%;
+.legend-mini-row{
+  text-align:right;
+  margin-top:.75rem;
+}
+.legend-mini-toggle{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:2rem; height:2rem;
   background: var(--bg-2);
   border:1px solid var(--line);
-  border-radius:8px;
-  padding:.5rem .8rem;
-  color: var(--text-1);
-  font-size:.85rem;
-  font-weight:700;
-  cursor:pointer;
-}
-.legend-toggle:hover{ border-color: var(--accent); color: var(--text-0); }
-.legend-toggle .legend-chevron{
-  transition: transform .2s ease;
+  border-radius:7px;
   color: var(--text-2);
+  cursor:pointer;
+  transition: color .15s ease, border-color .15s ease;
 }
-.legend-toggle[aria-expanded="true"] .legend-chevron{ transform: rotate(180deg); }
+.legend-mini-toggle:hover, .legend-mini-toggle:focus-visible{
+  color: var(--accent);
+  border-color: var(--accent);
+  outline: none;
+}
+.legend-mini-toggle i{
+  font-size:.85rem;
+  transition: transform .2s ease;
+}
+/* مطوي: سهم أفقي (‹) — مفتوح: يدور 90° ليصبح رأسيًا (⌄) */
+.legend-mini-toggle[aria-expanded="true"] i{
+  transform: rotate(-90deg);
+}
 
 /* ---------- Section ---------- */
 .section-title{

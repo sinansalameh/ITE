@@ -93,19 +93,6 @@
         <ul id="notesList"></ul>
       </div>
     </div>
-
-    <div class="col-12">
-      <div class="info-card">
-        <h3><i class="bi bi-palette" style="color:var(--accent)"></i> دليل الألوان والتمييز البصري</h3>
-        <div class="row g-2 mb-3" id="colorLegend"></div>
-        <p style="color:var(--text-1);font-size:.9rem">
-          عند المرور بالمؤشر فوق أي بطاقة مقرر في المخطط الرئيسي: تبقى كل البطاقات الأخرى معتّمة،
-          وتُبرَز البطاقة نفسها بإطار بلون تصنيفها، وتُبرَز <strong style="color:#F4B740">المتطلبات السابقة</strong>
-          (كامل السلسلة) بإطار كهرماني وشارة «متطلب سابق»، وتُبرَز
-          <strong style="color:#4CAF7D">المقررات المعتمِدة عليه</strong> (المباشرة فقط) بإطار أخضر وشارة «يعتمد عليه».
-        </p>
-      </div>
-    </div>
   </div>
 
 </main>
@@ -128,12 +115,6 @@ document.getElementById('notesList').innerHTML = NOTES.map(n => `<li>${n}</li>`)
 
 document.getElementById('thresholdBody').innerHTML = CREDIT_THRESHOLDS.map(r => `
   <tr><td>السنة ${r.year}</td><td class="text-end mono" style="color:var(--accent)">${r.min} نقطة</td></tr>
-`).join('');
-
-document.getElementById('colorLegend').innerHTML = Object.entries(CATEGORIES).map(([id, cat]) => `
-  <div class="col-6 col-md-4 col-lg-3">
-    <div class="legend-key"><span class="swatch" style="background:${cat.color}"></span>${cat.label}</div>
-  </div>
 `).join('');
 </script>
 </body>
