@@ -69,7 +69,7 @@
         <button id="btnPrint" class="btn btn-sm btn-outline-blueprint w-100"><i class="bi bi-printer me-1"></i> طباعة / PDF</button>
       </div>
       <div class="col-6 col-md-3">
-        <button id="btnGpa" class="btn btn-sm btn-blueprint w-100" data-bs-toggle="collapse" data-bs-target="#gpaPanel"><i class="bi bi-calculator me-1"></i> ملخّص المعدل</button>
+        <button id="btnGpa" class="btn btn-sm btn-outline-blueprint w-100" data-bs-toggle="collapse" data-bs-target="#gpaPanel" aria-expanded="false"><i class="bi bi-calculator me-1"></i> ملخّص المعدل</button>
       </div>
       <div class="col-12 col-md-6">
         <div id="cloudStatusNote" style="font-size:.78rem;color:var(--text-2)"></div>
@@ -247,6 +247,9 @@
         <div>
           <div class="mono" id="courseModalCode" style="color:var(--accent);font-size:.78rem"></div>
           <h5 class="modal-title mb-0" id="courseModalTitle"></h5>
+          <a href="#" id="courseModalFullLink" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-1 mt-1" style="font-size:.75rem;color:var(--text-2);text-decoration:none">
+            عرض التفاصيل الكاملة <i class="bi bi-box-arrow-up-left"></i>
+          </a>
         </div>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
@@ -262,8 +265,8 @@
 /* ============================================================
    الإعداد والاتصال بـ Supabase
    ============================================================ */
-const SUPABASE_URL = "https://eokvxgpqrwipernnpmpm.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVva3Z4Z3BxcndpcGVybm5wbXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyNDU2NjQsImV4cCI6MjEwNDgyMTY2NH0._jzqe0sHNLCEfQdkOEBKkq5jWxFFI4LLfhYEANRhzNM";
+const SUPABASE_URL = "REPLACE_WITH_SUPABASE_URL";
+const SUPABASE_ANON_KEY = "REPLACE_WITH_SUPABASE_ANON_KEY";
 const ALLOWED_EMAIL_DOMAIN = "@svuonline.org";
 
 const SUPABASE_CONFIGURED = !SUPABASE_URL.includes('REPLACE_WITH') && !SUPABASE_ANON_KEY.includes('REPLACE_WITH');
@@ -570,13 +573,19 @@ function renderStats(visible){
   const gpa = computeGpa();
   const gpaText = gpa.avg !== null ? gpa.avg.toFixed(1) : '—';
   const failedCount = COURSES.filter(c => effectiveStatus(c.code) === 'failed').length;
+  const nextThreshold = CREDIT_THRESHOLDS.find(t => t.min > earned);
+  const nextYearLine = nextThreshold
+    ? `<div class="mb-1" style="color:var(--text-1);font-weight:700">${nextThreshold.min - earned} نقطة متبقية للسنة ${nextThreshold.year}</div>`
+    : '';
 
   statsRow.innerHTML = `
     <div class="col-6 col-lg-3">
       <div class="stat-card"><div class="num mono">${earned}</div><div class="label">نقطة معتمدة مكتسبة</div></div>
     </div>
     <div class="col-6 col-lg-3">
-      <div class="stat-card"><div class="num mono">${remaining}</div><div class="label">نقطة متبقية للتخرج (من ${GRAD_TOTAL_CREDITS})</div>
+      <div class="stat-card">
+        ${nextYearLine}
+        <div class="num mono">${remaining}</div><div class="label">نقطة متبقية للتخرج (من ${GRAD_TOTAL_CREDITS})</div>
         <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
       </div>
     </div>
@@ -603,7 +612,7 @@ function renderGpaSummary(){
         <tbody>
           ${passedList.map(c => {
             const pa = passedAttempt(c.code);
-            const grade = (pa.coursework_grade!=null && pa.final_exam_grade!=null) ? `${Number(pa.coursework_grade)+Number(pa.final_exam_grade)}/100` : '—';
+            const grade = (pa.coursework_grade!=null && pa.final_exam_grade!=null) ? `${fmtGrade(Number(pa.coursework_grade)+Number(pa.final_exam_grade))}/100` : '—';
             return `<tr><td>${c.name}</td><td class="mono">${c.credits}</td><td class="mono">${grade}</td><td>${pa.is_locked ? '<i class="bi bi-lock-fill" style="color:var(--text-2)"></i>' : ''}</td></tr>`;
           }).join('')}
         </tbody>
@@ -653,7 +662,7 @@ function renderListView(courses){
     const relevant = passedAttempt(c.code) || latestAttempt(c.code);
     const termName = relevant ? ((academicTerms.find(t => t.id === relevant.term_id) || {}).name || '—') : '—';
     const gradeText = (relevant && relevant.coursework_grade != null && relevant.final_exam_grade != null)
-      ? `${Number(relevant.coursework_grade) + Number(relevant.final_exam_grade)}/100`
+      ? `${fmtGrade(Number(relevant.coursework_grade) + Number(relevant.final_exam_grade))}/100`
       : '—';
     const statusLabel = status ? STATUS_META[status].label : 'لم يُسجَّل بعد';
     return `<tr>
@@ -688,6 +697,7 @@ function openCourseModal(code){
 
   document.getElementById('courseModalCode').textContent = code;
   document.getElementById('courseModalTitle').textContent = course.name;
+  document.getElementById('courseModalFullLink').href = `course.html?code=${encodeURIComponent(code)}`;
 
   const body = document.getElementById('courseModalBody');
   if (!CLOUD_ENABLED){
@@ -713,7 +723,7 @@ function renderCourseModalBody(course){
           const termName = (academicTerms.find(t => t.id === a.term_id) || {}).name || '—';
           const meta = STATUS_META[a.status];
           const gradesText = (a.coursework_grade != null && a.final_exam_grade != null)
-            ? `أعمال ${a.coursework_grade}/30 + نهائي ${a.final_exam_grade}/70 = ${Number(a.coursework_grade) + Number(a.final_exam_grade)}/100`
+            ? `أعمال ${fmtGrade(a.coursework_grade)}/30 + نهائي ${fmtGrade(a.final_exam_grade)}/70 = ${fmtGrade(Number(a.coursework_grade) + Number(a.final_exam_grade))}/100`
             : 'لم تُدخَل العلامات بعد';
           return `
             <div class="attempt-row" style="--sc:${meta.color}">
@@ -748,11 +758,11 @@ function renderCourseModalBody(course){
       <div class="row g-2 align-items-end">
         <div class="col-6">
           <label class="small-label">علامة الأعمال (من 30)</label>
-          <input type="number" min="0" max="30" step="0.5" class="form-control form-control-sm" id="gradeCoursework" value="${currentAttempt.coursework_grade ?? ''}">
+          <input type="number" min="0" max="30" step="0.5" class="form-control form-control-sm" id="gradeCoursework" value="${fmtGrade(currentAttempt.coursework_grade)}">
         </div>
         <div class="col-6">
           <label class="small-label">علامة الامتحان النهائي (من 70)</label>
-          <input type="number" min="0" max="70" step="0.5" class="form-control form-control-sm" id="gradeFinal" value="${currentAttempt.final_exam_grade ?? ''}">
+          <input type="number" min="0" max="70" step="0.5" class="form-control form-control-sm" id="gradeFinal" value="${fmtGrade(currentAttempt.final_exam_grade)}">
         </div>
       </div>
       <button class="btn btn-sm btn-blueprint w-100 mt-2" id="btnSaveGrades" data-attempt-id="${currentAttempt.id}">
@@ -871,6 +881,14 @@ document.getElementById('btnPrint').addEventListener('click', () => {
   setTimeout(() => window.print(), 100);
 });
 
+// ينظّف عيوب الفاصلة العائمة الثنائية (مثل 75.78999999999999) دون أي أثر
+// على القيمة الفعلية المخزَّنة أو المستخدَمة في الحسابات — تنسيق عرض فقط.
+function fmtGrade(n){
+  if (n === null || n === undefined || n === '') return '';
+  const rounded = parseFloat(Number(n).toFixed(2));
+  return String(rounded);
+}
+
 function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -880,6 +898,20 @@ function showToast(msg){
 }
 
 trackFilter.addEventListener('change', render);
+
+/* ---------- زر "ملخّص المعدل" يعكس حالته (مفتوح/مغلق) بصريًا ---------- */
+const gpaPanelEl = document.getElementById('gpaPanel');
+const btnGpaEl = document.getElementById('btnGpa');
+gpaPanelEl.addEventListener('shown.bs.collapse', () => {
+  btnGpaEl.classList.remove('btn-outline-blueprint');
+  btnGpaEl.classList.add('btn-blueprint');
+  btnGpaEl.setAttribute('aria-expanded', 'true');
+});
+gpaPanelEl.addEventListener('hidden.bs.collapse', () => {
+  btnGpaEl.classList.remove('btn-blueprint');
+  btnGpaEl.classList.add('btn-outline-blueprint');
+  btnGpaEl.setAttribute('aria-expanded', 'false');
+});
 
 /* ============================================================
    استيراد كشف العلامات من الجامعة (svuis.svuonline.org)

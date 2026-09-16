@@ -73,9 +73,9 @@ const COURSES = [
   // ==================== مقررات عامة (General) ====================
   { code:"GCS301", name:"مهارات الحاسوب", nameEn:"Computer Skills – ICDL", credits:4, category:"general", tracks:[], term:1, prereq:[] },
   { code:"GOE301", name:"مدخل إلى التعلم الإلكتروني", nameEn:"Introduction to On-Line Education", credits:4, category:"general", tracks:[], term:1, prereq:[] },
-  { code:"L1", name:"اللغة الإنكليزية (1)", nameEn:"English Language I", credits:0, category:"general", tracks:[], term:1, prereq:[] },
+  { code:"L1", name:"اللغة الإنكليزية (1)", nameEn:"English Language I", credits:3, category:"general", tracks:[], term:1, prereq:[] },
   { code:"GTW301", name:"مهارات التواصل والكتابة العلمية", nameEn:"Communication Skills and Technical Writing", credits:5, category:"general", tracks:[], term:2, prereq:["GCS301"] },
-  { code:"L2", name:"اللغة الإنكليزية (2)", nameEn:"English Language II", credits:0, category:"general", tracks:[], term:2, prereq:["L1"] },
+  { code:"L2", name:"اللغة الإنكليزية (2)", nameEn:"English Language II", credits:3, category:"general", tracks:[], term:2, prereq:["L1"] },
   { code:"L3", name:"اللغة الإنكليزية (3)", nameEn:"English Language III", credits:3, category:"general", tracks:[], term:3, prereq:["L2"] },
   { code:"GMN401", name:"أساسيات الإدارة", nameEn:"Fundamentals of Management", credits:4, category:"general", tracks:[], term:4, prereq:["BNA401"] },
   { code:"L4", name:"اللغة الإنكليزية (4)", nameEn:"English Language IV", credits:3, category:"general", tracks:[], term:4, prereq:["L3"] },

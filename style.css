@@ -68,6 +68,20 @@ body{
   padding: .9rem 1.1rem;
 }
 
+.hero .planner-cta{
+  border:1px solid var(--accent);
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--accent), #16A085);
+  color: #fff;
+  padding: 1.1rem 1.3rem;
+  box-shadow: 0 8px 24px -10px rgba(92,141,255,.55);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.hero .planner-cta:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -8px rgba(92,141,255,.7);
+}
+
 /* ---------- Toolbar ---------- */
 .toolbar{
   position: sticky;
