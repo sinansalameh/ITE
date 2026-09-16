@@ -214,7 +214,7 @@
           <form id="authForm">
             <div class="mb-2">
               <label class="small-label">البريد الإلكتروني</label>
-              <input type="email" id="authEmail" class="form-control form-control-sm" required placeholder="name_ID@svuonline.org">
+              <input type="email" id="authEmail" class="form-control form-control-sm" required>
             </div>
             <div class="mb-3">
               <label class="small-label">كلمة المرور</label>
@@ -707,9 +707,72 @@ function openCourseModal(code){
   } else {
     body.innerHTML = renderCourseModalBody(course);
     bindCourseModalEvents(course);
+    const completed = hasPassed(course.code) || courseAttempts(course.code).some(a => a.status === 'failed');
+    if (completed){
+      loadMyRank(course.code);
+      loadMyDifficultyVote(course.code);
+    }
   }
 
   bootstrap.Modal.getOrCreateInstance(document.getElementById('courseModal')).show();
+}
+
+async function loadMyRank(courseCode){
+  const wrap = document.getElementById('myRankWrap');
+  if (!wrap) return;
+  const { data, error } = await sb.rpc('get_my_course_rank', { p_course_code: courseCode });
+  if (error || !data || !data.length){
+    wrap.innerHTML = `<div class="chain-panel-empty">تعذّر تحميل هذه البيانات حاليًا.</div>`;
+    return;
+  }
+  const r = data[0];
+  if (!r.enough_data){
+    wrap.innerHTML = `<div class="chain-panel-empty">لا تتوفر بيانات كافية بعد لهذا المقرر (يلزم 30 طالبًا على الأقل ممن خاضوه).</div>`;
+    return;
+  }
+  if (r.my_grade == null){
+    wrap.innerHTML = `<div class="chain-panel-empty">لم تنجح في هذا المقرر بعد — ستظهر مقارنتك هنا بعد النجاح.</div>`;
+    return;
+  }
+  wrap.innerHTML = `
+    <div class="row g-2">
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="num mono">#${r.rank_position}</div><div class="label">ترتيبك من ${r.total_passed} ناجح</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="num mono">${fmtGrade(r.percentile)}%</div><div class="label">أعلى من هذه النسبة من الطلاب</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="num mono">${r.same_grade_count}</div><div class="label">حصلوا على نفس علامتك بالضبط</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="num mono">${fmtGrade(r.highest_grade)} / ${fmtGrade(r.lowest_grade)}</div><div class="label">أعلى / أدنى علامة ناجحة</div></div></div>
+    </div>
+  `;
+}
+
+async function loadMyDifficultyVote(courseCode){
+  const wrap = document.getElementById('difficultyVoteWrap');
+  if (!wrap) return;
+  const { data } = await sb.from('course_difficulty_votes').select('rating')
+    .eq('user_id', currentUser.id).eq('course_code', courseCode).maybeSingle();
+  renderDifficultyStars(courseCode, data ? data.rating : null);
+}
+
+function renderDifficultyStars(courseCode, currentRating){
+  const wrap = document.getElementById('difficultyVoteWrap');
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <div class="d-flex align-items-center flex-wrap gap-1">
+      ${[1,2,3,4,5].map(n => `<i class="bi ${currentRating && n <= currentRating ? 'bi-star-fill' : 'bi-star'} diff-star" data-value="${n}" style="cursor:pointer;font-size:1.3rem;color:#F4B740"></i>`).join('')}
+      ${currentRating ? `<span class="ms-2" style="color:var(--text-2);font-size:.78rem">قيّمته بـ ${currentRating} نجوم — اضغط لتغييره</span>` : `<span class="ms-2" style="color:var(--text-2);font-size:.78rem">اضغط لتقييم صعوبته</span>`}
+    </div>
+  `;
+  wrap.querySelectorAll('.diff-star').forEach(star => {
+    star.addEventListener('click', async () => {
+      const rating = Number(star.dataset.value);
+      const { error } = await sb.from('course_difficulty_votes').upsert(
+        { user_id: currentUser.id, course_code: courseCode, rating },
+        { onConflict: 'user_id,course_code' }
+      );
+      if (error){ showToast('تعذّر حفظ التقييم: ' + error.message); return; }
+      renderDifficultyStars(courseCode, rating);
+      showToast('شكرًا لتقييمك!');
+    });
+  });
 }
 
 function renderCourseModalBody(course){
@@ -740,6 +803,18 @@ function renderCourseModalBody(course){
             </div>`;
         }).join('')}
       </div>
+    </div>
+  ` : '';
+
+  const completed = hasPassed(course.code) || courseAttempts(course.code).some(a => a.status === 'failed');
+  const statsPlaceholder = completed ? `
+    <div class="mb-3">
+      <div class="chain-panel-label mb-2">مقارنتك مع بقية الطلاب</div>
+      <div id="myRankWrap"><div class="chain-panel-empty">جارٍ التحميل…</div></div>
+    </div>
+    <div class="mb-3">
+      <div class="chain-panel-label mb-2">قيّم صعوبة هذا المقرر</div>
+      <div id="difficultyVoteWrap"><div class="chain-panel-empty">جارٍ التحميل…</div></div>
     </div>
   ` : '';
 
@@ -782,7 +857,7 @@ function renderCourseModalBody(course){
     actionHtml = `<div class="missing-note"><i class="bi bi-lock-fill"></i> بانتظار: ${missing.join('، ') || 'غير معروف'}</div>`;
   }
 
-  return historyHtml + `<div class="detail-hero" style="--cat:var(--accent)">${actionHtml}</div>`;
+  return historyHtml + statsPlaceholder + `<div class="detail-hero" style="--cat:var(--accent)">${actionHtml}</div>`;
 }
 
 function bindCourseModalEvents(course){

@@ -41,6 +41,7 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="data.js"></script>
 <script>
 const params = new URLSearchParams(location.search);
@@ -209,6 +210,14 @@ if (!course){
         — لم تتم تعبئة هذا القسم بعد —
       </div>
     </div>
+
+    <div class="mt-4" id="courseStatsSection">
+      <div class="section-title mt-0">
+        <span class="bar" style="background:var(--accent)"></span>
+        <h2>إحصائيات المقرر</h2>
+      </div>
+      <div id="courseStatsWrap"><div class="chain-panel-empty">جارٍ التحميل…</div></div>
+    </div>
   `;
 
   const ancestors = Array.from(getAncestors(course.code));
@@ -218,6 +227,72 @@ if (!course){
   } else {
     chainWrap.innerHTML = relList(ancestors, '');
   }
+
+  loadCourseStats(course.code);
+}
+
+/* ============================================================
+   إحصائيات المقرر (عامة، مرئية للجميع دون تسجيل دخول) — عبر دالة
+   Supabase آمنة تُرجع أرقامًا مجمّعة فقط، لا أي علامة فردية لأي طالب.
+   ============================================================ */
+const SUPABASE_URL = "REPLACE_WITH_SUPABASE_URL";
+const SUPABASE_ANON_KEY = "REPLACE_WITH_SUPABASE_ANON_KEY";
+const SUPABASE_CONFIGURED = !SUPABASE_URL.includes('REPLACE_WITH') && !SUPABASE_ANON_KEY.includes('REPLACE_WITH');
+let sb = null;
+if (SUPABASE_CONFIGURED){
+  try{ sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
+  catch(err){ console.error('تعذّر تفعيل الإحصائيات:', err); }
+}
+
+function starsHTML(rating){
+  if (rating == null) return '<span style="color:var(--text-2)">لا تقييمات بعد</span>';
+  const full = Math.round(rating);
+  return Array.from({length:5}, (_,i) => `<i class="bi ${i < full ? 'bi-star-fill' : 'bi-star'}" style="color:#F4B740"></i>`).join('');
+}
+
+async function loadCourseStats(courseCode){
+  const wrap = document.getElementById('courseStatsWrap');
+  if (!sb){
+    wrap.innerHTML = `<div class="chain-panel-empty">الإحصائيات غير مُفعَّلة على هذا الموقع بعد.</div>`;
+    return;
+  }
+  const { data, error } = await sb.rpc('get_course_public_stats', { p_course_code: courseCode });
+  if (error || !data || !data.length){
+    wrap.innerHTML = `<div class="chain-panel-empty">تعذّر تحميل الإحصائيات حاليًا.</div>`;
+    console.error(error);
+    return;
+  }
+  const s = data[0];
+  if (!s.total_attempts){
+    wrap.innerHTML = `<div class="chain-panel-empty">لا توجد بيانات كافية بعد لهذا المقرر — كن أول من يسجّله في مخططه الشخصي!</div>`;
+    return;
+  }
+
+  wrap.innerHTML = `
+    <div class="row g-3">
+      <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="num mono" style="color:#4CAF7D">${s.pass_rate ?? '—'}%</div><div class="label">نسبة النجاح (${s.passed_count} من ${s.total_attempts})</div></div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="num mono">${s.avg_grade ?? '—'}</div><div class="label">متوسط علامة الناجحين (من 100)</div></div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="num mono">${s.avg_attempts_to_pass ?? '—'}</div><div class="label">متوسط عدد المحاولات حتى النجاح</div></div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="num" style="font-size:1.1rem">${starsHTML(s.difficulty_avg)}</div><div class="label">تقييم الصعوبة (${s.difficulty_votes || 0} صوت)</div></div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="num mono">${s.retake_2_pct ?? '—'}%</div><div class="label">أعادوا المقرر مرة واحدة</div></div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-card"><div class="num mono">${s.retake_3plus_pct ?? '—'}%</div><div class="label">أعادوا المقرر أكثر من مرة</div></div>
+      </div>
+    </div>
+    <p class="mt-2 mb-0" style="color:var(--text-2);font-size:.75rem">
+      محسوبة تلقائيًا من بيانات الطلاب المسجَّلين في المخطط الشخصي — أرقام مجمّعة فقط، لا تكشف عن أي طالب بعينه.
+    </p>
+  `;
 }
 </script>
 </body>
