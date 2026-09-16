@@ -3,35 +3,1281 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>الخدمة قيد التطوير — ITE Masar</title>
-
-<!--
-  ملاحظة للمطوّر: هذا محتوى مؤقت يحل محل المخطط الدراسي الشخصي الحقيقي
-  ريثما تُستأنف الميزة. الكود الفعلي الكامل للمخطط محفوظ بأمان ولم يُحذف
-  من أي مكان — فقط اطلب من Claude استعادته إلى planner.html عند الرغبة
-  بإعادة تفعيله، ولا حاجة لإعادة بنائه من الصفر.
--->
+<title>المخطط الدراسي الشخصي — ITE Masar</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.rtl.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
 <link rel="stylesheet" href="style.css">
+
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "962f3b8db7984cafaef966a976c47d83"}'></script>
+<!-- End Cloudflare Web Analytics -->
 </head>
 <body>
 
-<div class="container d-flex flex-column align-items-center justify-content-center text-center" style="min-height:100vh">
-  <div class="eyebrow mb-2">ITE Masar</div>
-  <i class="bi bi-tools" style="font-size:2.5rem;color:var(--accent)"></i>
-  <h1 class="h3 fw-bold mt-3 mb-2">الخدمة قيد التطوير</h1>
-  <p class="lead mb-4" style="max-width:480px;color:var(--text-1)">
-    نعمل حاليًا على تحسين المخطط الدراسي الشخصي. الميزة متوقفة مؤقتًا وستعود قريبًا
-    — بقية الموقع يعمل كالمعتاد.
-  </p>
-  <a href="index.html" class="btn btn-blueprint">
-    <i class="bi bi-arrow-left me-1"></i> العودة إلى المخطط الرئيسي
-  </a>
+<!-- ===================== Header ===================== -->
+<header class="hero no-print">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-8">
+        <div class="eyebrow">ITE Masar — مسار</div>
+        <h1>المخطط الدراسي الشخصي</h1>
+        <p class="lead">
+          سجّلّ نفسك في مقرراتك فصلًا بفصل، وأدخل علاماتك بعد الامتحانات (أعمال 30% + نهائي 70%).
+          يحسب المخطط حالتك تلقائيًا، ويتذكّر كل محاولاتك السابقة حتى لو رسبت وأعدت المقرر لاحقًا.
+        </p>
+      </div>
+      <div class="col-lg-4 d-flex flex-column gap-2">
+        <a href="index.html" class="plate text-decoration-none d-flex justify-content-between align-items-center" style="color:inherit">
+          <span><i class="bi bi-diagram-3 me-2" style="color:var(--accent)"></i>المخطط المرجعي الكامل</span>
+          <i class="bi bi-arrow-left"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== Toolbar ===================== -->
+<div class="toolbar no-print">
+  <div class="container">
+    <div class="row g-2 align-items-end">
+      <div class="col-6 col-md-3">
+        <label class="small-label">الحساب</label>
+        <button id="btnAccount" class="btn btn-sm btn-outline-blueprint w-100" data-bs-toggle="modal" data-bs-target="#authModal">
+          <i class="bi bi-cloud me-1"></i> <span id="accountBtnLabel">تسجيل الدخول</span>
+        </button>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="small-label" for="academicTermSelect">الفصل الجامعي (للتسجيل الآن)</label>
+        <select id="academicTermSelect" class="form-select form-select-sm"></select>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="small-label" for="trackFilter">المسار / التخصص</label>
+        <select id="trackFilter" class="form-select form-select-sm"></select>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="small-label">&nbsp;</label>
+        <button id="btnToggleListView" class="btn btn-sm btn-outline-blueprint w-100">
+          <i class="bi bi-list-ul me-1"></i> عرض كسجل أكاديمي
+        </button>
+      </div>
+    </div>
+    <div class="row g-2 mt-1">
+      <div class="col-6 col-md-3">
+        <button id="btnPrint" class="btn btn-sm btn-outline-blueprint w-100"><i class="bi bi-printer me-1"></i> طباعة / PDF</button>
+      </div>
+      <div class="col-6 col-md-3">
+        <button id="btnGpa" class="btn btn-sm btn-outline-blueprint w-100" data-bs-toggle="collapse" data-bs-target="#gpaPanel" aria-expanded="false"><i class="bi bi-calculator me-1"></i> ملخّص المعدل</button>
+      </div>
+      <div class="col-12 col-md-6">
+        <div id="cloudStatusNote" style="font-size:.78rem;color:var(--text-2)"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
+<main class="container pb-5">
+
+  <!-- ===================== Summary stats ===================== -->
+  <div class="row g-3 mt-1" id="statsRow"></div>
+
+  <!-- ===================== Import from university system ===================== -->
+  <div class="mt-3 no-print">
+    <div class="info-card">
+      <h3 class="d-flex align-items-center gap-2">
+        <i class="bi bi-cloud-upload" style="color:var(--accent)"></i> استيراد كشف العلامات من الجامعة
+        <button type="button" class="help-toggle-btn" data-bs-toggle="collapse" data-bs-target="#importHelpBox" aria-expanded="false" title="مساعدة">؟</button>
+      </h3>
+      <div class="collapse" id="importHelpBox">
+        <div class="alert alert-info mt-2" style="font-size:.85rem">
+          يمكنك تحميل بيانات علاماتك السابقة والحالية كاملةً باتباع الخطوات التالية:
+          <ol class="mb-0 mt-2 ps-3">
+            <li>ادخل إلى <span class="mono">svuis.svuonline.org</span></li>
+            <li>اضغط على <span class="mono">Study Profile</span></li>
+            <li>ستظهر لك جميع علاماتك الحالية والسابقة</li>
+            <li>أسفل الصفحة، اضغط زر <span class="mono">Excel</span> لتصدير بياناتك كملف بامتداد xls</li>
+          </ol>
+          ثم ارفع هذا الملف من الزر أدناه.
+        </div>
+      </div>
+      <p style="color:var(--text-2);font-size:.85rem" class="mb-3">
+        يملأ هذا تلقائيًا كل مقرراتك وعلاماتك وفصولك الجامعية دفعة واحدة، بدلًا من إدخالها مقررًا
+        بمقرر. لن يُعدَّل أي مقرر مؤرشف (مثبَّت نهائيًا) مهما احتوى الملف.
+      </p>
+      <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-8">
+          <input type="file" id="importFileInput" accept=".xls,.html,.htm" class="form-control form-control-sm">
+        </div>
+        <div class="col-12 col-md-4">
+          <button id="btnImport" class="btn btn-sm btn-blueprint w-100"><i class="bi bi-cloud-upload me-1"></i> استيراد</button>
+        </div>
+      </div>
+      <div id="importStatus" class="mt-2"></div>
+    </div>
+  </div>
+
+  <!-- ===================== Suspension countdown (10-year cap) ===================== -->
+  <div class="mt-3 no-print">
+    <div class="info-card">
+      <h3><i class="bi bi-hourglass-split" style="color:var(--accent)"></i> سقف السنوات العشر</h3>
+      <p style="color:var(--text-2);font-size:.85rem" class="mb-3">
+        حسب لوائح الجامعة، يُعتبر الطالب مستنفدًا إذا تجاوزت مدة دراسته عشر سنوات دون التخرج. كل فصل
+        تسجّلت فيه — بغض النظر عن نتيجته — يُحتسب نصف سنة من هذه المدة.
+      </p>
+      <div id="suspensionCountdown"></div>
+    </div>
+  </div>
+
+  <!-- ===================== GPA summary panel ===================== -->
+  <div class="collapse mt-3 no-print" id="gpaPanel">
+    <div class="info-card">
+      <h3><i class="bi bi-calculator" style="color:var(--accent)"></i> ملخّص المعدل التراكمي</h3>
+      <p style="color:var(--text-2);font-size:.85rem" class="mb-3">
+        يُحتسب المعدل من المقررات <strong>الناجحة فقط</strong> — لا تدخل علامات المقررات الراسبة في
+        الحساب إطلاقًا، حتى بعد النجاح في إعادتها. لإدخال أو تعديل علامة، افتح المقرر من القائمة أدناه.
+      </p>
+      <div id="gpaSummaryWrap"></div>
+    </div>
+  </div>
+
+  <!-- ===================== Path-to-target estimator ===================== -->
+  <div class="mt-4 no-print">
+    <div class="info-card">
+      <h3><i class="bi bi-signpost-2" style="color:var(--accent)"></i> ما أقصر طريق لمقرر معيّن؟</h3>
+      <p style="color:var(--text-2);font-size:.85rem" class="mb-3">
+        اختر أي مقرر وسنعرض لك سلسلة المتطلبات السابقة المتبقية للوصول إليه، مرتبة حسب الفصل.
+      </p>
+      <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-8">
+          <select id="targetCourseSelect" class="form-select form-select-sm"></select>
+        </div>
+        <div class="col-12 col-md-4">
+          <button id="btnComputePath" class="btn btn-sm btn-blueprint w-100"><i class="bi bi-signpost-2 me-1"></i> احسب المسار المتبقي</button>
+        </div>
+      </div>
+      <div id="pathResult" class="mt-3"></div>
+    </div>
+  </div>
+
+  <!-- ===================== Legend ===================== -->
+  <div class="legend mt-4 no-print" id="statusLegend"></div>
+
+  <!-- ===================== Card view ===================== -->
+  <div id="sectionsWrap" class="mt-2"></div>
+
+  <!-- ===================== Printable list / academic record view ===================== -->
+  <div id="listViewWrap" class="mt-2 d-none"></div>
+
+</main>
+
+<footer class="site-footer no-print">
+  <div class="container">
+    <div class="mb-2">
+      <strong style="color:var(--text-1)">كيف تُحسب الحالة:</strong>
+      بعد إدخال علامتي الأعمال (30%) والنهائي (70%)، يُحسب المجموع تلقائيًا — 60 فما فوق = ناجح،
+      وأقل من ذلك = راسب. المقرر الراسب يبقى "مسجَّلًا" لأغراض فتح المقررات التالية له (وفق نظام
+      الجامعة)، لكن علامته لا تدخل في المعدل التراكمي أبدًا.
+    </div>
+    <div class="d-flex flex-wrap justify-content-between gap-2">
+      <span>هذه الأداة مساعدة تقديرية ولا تُغني عن مراجعة الدائرة التعليمية أو النظام الرسمي للجامعة.</span>
+      <span>
+        <a href="notes.html" class="text-decoration-none" style="color:var(--accent)">ملاحظات ومعلومات البرنامج</a>
+        ·
+        <a href="feedback.html" class="text-decoration-none" style="color:var(--accent)">شاركنا ملاحظاتك</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<div id="toast" class="planner-toast"></div>
+
+<!-- ===================== Auth modal ===================== -->
+<div class="modal fade no-print" id="authModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content planner-modal">
+      <div class="modal-header">
+        <h5 class="modal-title" id="authModalTitle">تسجيل الدخول لمزامنة خطتك</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+
+        <div id="authGuestPanel">
+          <ul class="nav nav-tabs mb-3" id="authTabs">
+            <li class="nav-item"><button class="nav-link active" data-tab="signin" type="button">تسجيل الدخول</button></li>
+            <li class="nav-item"><button class="nav-link" data-tab="signup" type="button">حساب جديد</button></li>
+          </ul>
+
+          <div id="authNotConfigured" class="alert alert-warning d-none"></div>
+
+          <form id="authForm">
+            <div class="mb-2">
+              <label class="small-label">البريد الإلكتروني</label>
+              <input type="email" id="authEmail" class="form-control form-control-sm" required>
+            </div>
+            <div class="mb-3">
+              <label class="small-label">كلمة المرور</label>
+              <input type="password" id="authPassword" class="form-control form-control-sm" minlength="6" required>
+            </div>
+            <button type="submit" id="authSubmitBtn" class="btn btn-blueprint w-100">تسجيل الدخول</button>
+            <div id="authStatus" class="mt-2" style="font-size:.85rem"></div>
+          </form>
+        </div>
+
+        <div id="authUserPanel" class="d-none">
+          <p style="color:var(--text-1)">
+            متصل حاليًا كـ <strong id="authUserEmail" class="mono"></strong>
+          </p>
+          <button id="btnSignOut" class="btn btn-sm w-100" style="border:1px solid #F16A6A;color:#F16A6A;background:transparent">
+            <i class="bi bi-box-arrow-right me-1"></i> تسجيل الخروج
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Course history / registration modal ===================== -->
+<div class="modal fade no-print" id="courseModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content planner-modal">
+      <div class="modal-header">
+        <div>
+          <div class="mono" id="courseModalCode" style="color:var(--accent);font-size:.78rem"></div>
+          <h5 class="modal-title mb-0" id="courseModalTitle"></h5>
+          <a href="#" id="courseModalFullLink" target="_blank" rel="noopener" class="d-inline-flex align-items-center gap-1 mt-1" style="font-size:.75rem;color:var(--text-2);text-decoration:none">
+            عرض التفاصيل الكاملة <i class="bi bi-box-arrow-up-left"></i>
+          </a>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="courseModalBody"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="data.js"></script>
+<script>
+/* ============================================================
+   الإعداد والاتصال بـ Supabase
+   ============================================================ */
+const SUPABASE_URL = "https://eokvxgpqrwipernnpmpm.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVva3Z4Z3BxcndpcGVybm5wbXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyNDU2NjQsImV4cCI6MjEwNDgyMTY2NH0._jzqe0sHNLCEfQdkOEBKkq5jWxFFI4LLfhYEANRhzNM";
+const ALLOWED_EMAIL_DOMAIN = "@svuonline.org";
+
+const SUPABASE_CONFIGURED = !SUPABASE_URL.includes('REPLACE_WITH') && !SUPABASE_ANON_KEY.includes('REPLACE_WITH');
+let CLOUD_ENABLED = false;
+let sb = null;
+if (SUPABASE_CONFIGURED){
+  try{
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    CLOUD_ENABLED = true;
+  }catch(err){
+    console.error('تعذّر تفعيل المزامنة السحابية — تحقق من SUPABASE_URL وSUPABASE_ANON_KEY:', err);
+  }
+}
+
+let currentUser = null;
+
+const GRAD_TOTAL_CREDITS = 300;
+const SUSPENSION_YEARS = 10;
+
+const STATUS_META = {
+  planned:    { label:'مخطط له',     icon:'bi-bookmark',          color:'#5C8DFF' },
+  inprogress: { label:'قيد الدراسة', icon:'bi-hourglass-split',   color:'#F4B740' },
+  failed:     { label:'راسب',        icon:'bi-x-circle',          color:'#F16A6A' },
+  exempted:   { label:'معفى',        icon:'bi-shield-check',      color:'#8E44AD' },
+  passed:     { label:'ناجح',        icon:'bi-check-circle-fill', color:'#4CAF7D' },
+};
+
+/* ---------- الفصول الجامعية (terms) ---------- */
+let academicTerms = [];
+let selectedAcademicTermId = null;
+
+async function loadAcademicTerms(){
+  if (!CLOUD_ENABLED) return;
+  const { data, error } = await sb.from('terms').select('*').order('term_order', { ascending:false });
+  if (error){ console.error(error); return; }
+  academicTerms = data || [];
+  const current = academicTerms.find(t => t.is_current);
+  selectedAcademicTermId = current ? current.id : (academicTerms[0] ? academicTerms[0].id : null);
+  renderAcademicTermSelect();
+}
+
+function renderAcademicTermSelect(){
+  const sel = document.getElementById('academicTermSelect');
+  if (!academicTerms.length){
+    sel.innerHTML = `<option value="">لا توجد فصول بعد</option>`;
+    return;
+  }
+  sel.innerHTML = academicTerms.map(t =>
+    `<option value="${t.id}">${t.name}${t.is_current ? ' (الحالي)' : ''}</option>`
+  ).join('');
+  sel.value = selectedAcademicTermId;
+}
+
+document.getElementById('academicTermSelect').addEventListener('change', (e) => {
+  selectedAcademicTermId = e.target.value ? Number(e.target.value) : null;
+});
+
+/* ---------- المحاولات الفصلية (course_attempts) ---------- */
+let attemptsByCourse = {};
+
+async function loadAttempts(){
+  attemptsByCourse = {};
+  if (!CLOUD_ENABLED || !currentUser) return;
+  const { data, error } = await sb.from('course_attempts').select('*').eq('user_id', currentUser.id);
+  if (error){ console.error(error); return; }
+  (data || []).forEach(a => { (attemptsByCourse[a.course_code] ||= []).push(a); });
+}
+
+/* ---------- "مخطط له" — محلي فقط، لا يحتاج فصلاً أو تسجيلاً حقيقيًا ---------- */
+const LS_PLANNED = 'itemasar_planned_v1';
+let plannedSet = new Set();
+function loadPlannedLocal(){
+  try{ plannedSet = new Set(JSON.parse(localStorage.getItem(LS_PLANNED) || '[]')); }
+  catch(e){ plannedSet = new Set(); }
+}
+function savePlannedLocal(){ localStorage.setItem(LS_PLANNED, JSON.stringify(Array.from(plannedSet))); }
+
+/* ---------- دوال مشتقة من المحاولات ---------- */
+function courseAttempts(code){ return attemptsByCourse[code] || []; }
+function attemptForTerm(code, termId){ return courseAttempts(code).find(a => a.term_id === termId); }
+function hasPassed(code){ return courseAttempts(code).some(a => a.status === 'passed'); }
+function hasExempted(code){ return courseAttempts(code).some(a => a.status === 'exempted'); }
+// "مكتمل" لأغراض النقاط المعتمدة وفتح المقررات التالية: ناجح أو معفى، كلاهما يُنهي المتطلب فعليًا
+function isCompleted(code){ return courseAttempts(code).some(a => a.status === 'passed' || a.status === 'exempted'); }
+function passedAttempt(code){ return courseAttempts(code).find(a => a.status === 'passed'); }
+function isRegistered(code){ return courseAttempts(code).length > 0; }
+
+function termOrderOf(termId){ return (academicTerms.find(t => t.id === termId) || {}).term_order || 0; }
+function latestAttempt(code){
+  const list = courseAttempts(code).slice().sort((a,b) => termOrderOf(b.term_id) - termOrderOf(a.term_id));
+  return list[0];
+}
+function effectiveStatus(code){
+  if (hasExempted(code)) return 'exempted';
+  if (hasPassed(code)) return 'passed';
+  const la = latestAttempt(code);
+  if (la) return la.status;
+  if (plannedSet.has(code)) return 'planned';
+  return null;
+}
+
+function earnedCredits(){
+  return COURSES.filter(c => isCompleted(c.code)).reduce((s,c) => s + c.credits, 0);
+}
+function computeGpa(){
+  let weighted = 0, creditSum = 0;
+  COURSES.forEach(c => {
+    const pa = passedAttempt(c.code);
+    if (pa && pa.coursework_grade != null && pa.final_exam_grade != null){
+      weighted += (Number(pa.coursework_grade) + Number(pa.final_exam_grade)) * c.credits;
+      creditSum += c.credits;
+    }
+  });
+  return { avg: creditSum ? weighted/creditSum : null, creditSum };
+}
+
+function isEligible(course){
+  const prereqsOk = course.prereq.every(p => isRegistered(p));
+  const creditOk = course.creditGate ? (earnedCredits() >= course.creditGate) : true;
+  const concurrentOk = course.concurrent ? course.concurrent.every(c => isRegistered(c)) : true;
+  return prereqsOk && creditOk && concurrentOk;
+}
+function missingRequirements(course){
+  const missingPrereq = course.prereq.filter(p => !isRegistered(p));
+  const items = missingPrereq.map(p => (COURSE_MAP[p] || {}).name || p);
+  if (course.concurrent){
+    course.concurrent.forEach(c => { if (!isRegistered(c)) items.push(`تسجيل «${(COURSE_MAP[c]||{}).name || c}» بالتوازي`); });
+  }
+  if (course.creditGate && earnedCredits() < course.creditGate){
+    items.push(`${course.creditGate} وحدة معتمدة على الأقل (لديك حاليًا ${earnedCredits()})`);
+  }
+  return items;
+}
+
+/* ============================================================
+   واجهة الصفحة — تصفية وعرض المقررات (نفس بنية المخطط المرجعي)
+   ============================================================ */
+const trackFilter   = document.getElementById('trackFilter');
+const sectionsWrap  = document.getElementById('sectionsWrap');
+const listViewWrap  = document.getElementById('listViewWrap');
+const statsRow      = document.getElementById('statsRow');
+const statusLegend  = document.getElementById('statusLegend');
+const targetCourseSelect = document.getElementById('targetCourseSelect');
+const pathResult = document.getElementById('pathResult');
+
+const trackGroups = {};
+TRACKS.forEach(t => { (trackGroups[t.group] ||= []).push(t); });
+trackFilter.innerHTML = `
+  <option value="all">كل المقررات (الأساسية + كل المسارات)</option>
+  <option value="foundation">المقررات العامة والأساسية فقط</option>
+`;
+Object.entries(trackGroups).forEach(([group, list]) => {
+  const og = document.createElement('optgroup');
+  og.label = group;
+  list.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = t.label;
+    og.appendChild(opt);
+  });
+  trackFilter.appendChild(og);
+});
+
+targetCourseSelect.innerHTML = SECTION_ORDER.map(catId => {
+  const inCat = COURSES.filter(c => c.category === catId);
+  if (!inCat.length) return '';
+  return `<optgroup label="${CATEGORIES[catId].label}">
+    ${inCat.map(c => `<option value="${c.code}">${c.name} — ${c.code}</option>`).join('')}
+  </optgroup>`;
+}).join('');
+
+function currentTrackPredicate(){
+  const val = trackFilter.value;
+  return (course) => {
+    if (val === 'all') return true;
+    if (val === 'foundation') return course.tracks.length === 0;
+    return course.tracks.length === 0 || course.tracks.includes(val);
+  };
+}
+function courseDisplayMeta(course){
+  const val = trackFilter.value;
+  const singleTrack = (val !== 'all' && val !== 'foundation') ? val : null;
+  const isShared = course.tracks.length > 1;
+  if (singleTrack){
+    const sectionId = course.tracks.length === 0 ? course.category : ('track-' + singleTrack);
+    return { color: CATEGORIES[sectionId].color };
+  }
+  return { color: isShared ? '#9AA5B1' : CATEGORIES[course.category].color };
+}
+function displayTerm(course){
+  const val = trackFilter.value;
+  const singleTrack = (val !== 'all' && val !== 'foundation') ? val : null;
+  return effectiveTerm(course, singleTrack);
+}
+
+statusLegend.innerHTML = `
+  <span class="chip"><span class="dot" style="background:#4CAF7D"></span>ناجح</span>
+  <span class="chip"><span class="dot" style="background:#F4B740"></span>قيد الدراسة</span>
+  <span class="chip"><span class="dot" style="background:#F16A6A"></span>راسب</span>
+  <span class="chip"><span class="dot" style="background:#8E44AD"></span>معفى</span>
+  <span class="chip"><span class="dot" style="background:#5C8DFF"></span>مخطط له</span>
+  <span class="chip"><span class="dot" style="background:#16A085"></span>متاح الآن</span>
+  <span class="chip"><span class="dot" style="background:#9AA5B1"></span>غير متاح بعد</span>
+`;
+
+function render(){
+  const pred = currentTrackPredicate();
+  const visible = COURSES.filter(pred);
+
+  renderStats(visible);
+  renderGpaSummary();
+  renderSuspensionCountdown();
+
+  const byTerm = {};
+  visible.forEach(c => { const t = displayTerm(c); (byTerm[t] ||= []).push(c); });
+  const terms = Object.keys(byTerm).map(Number).sort((a,b) => a-b);
+
+  sectionsWrap.innerHTML = terms.map(t => {
+    const cards = byTerm[t].slice().sort((a,b) => a.category.localeCompare(b.category)).map(c => courseCardHTML(c)).join('');
+    return `
+      <section>
+        <div class="section-title">
+          <span class="bar" style="background:var(--accent)"></span>
+          <h2>الفصل ${TERM_LABELS[t]}</h2>
+          <span class="count">(${byTerm[t].length})</span>
+        </div>
+        <div class="course-grid">${cards}</div>
+      </section>`;
+  }).join('');
+
+  listViewWrap.innerHTML = renderListView(visible.slice().sort((a,b) => displayTerm(a)-displayTerm(b)));
+
+  bindCourseCardClicks();
+}
+
+function courseCardHTML(course){
+  const meta = courseDisplayMeta(course);
+  const status = effectiveStatus(course.code);
+  const eligible = isEligible(course);
+
+  let stateClass = 'status-locked';
+  if (status === 'passed') stateClass = 'status-passed';
+  else if (status === 'exempted') stateClass = 'status-exempted';
+  else if (status === 'failed') stateClass = 'status-failed';
+  else if (status === 'inprogress') stateClass = 'status-inprogress';
+  else if (status === 'planned') stateClass = 'status-planned';
+  else if (eligible) stateClass = 'status-eligible';
+
+  const term = displayTerm(course);
+  const statusBadge = status
+    ? `<span class="status-pill" style="--sc:${STATUS_META[status].color}"><i class="bi ${STATUS_META[status].icon}"></i> ${STATUS_META[status].label}</span>`
+    : (eligible ? `<span class="eligible-badge"><i class="bi bi-unlock-fill"></i> متاح الآن</span>` : '');
+
+  const pa = passedAttempt(course.code);
+  const lockBadge = (pa && pa.is_locked) ? `<span class="lock-badge" title="مؤرشف نهائيًا"><i class="bi bi-lock-fill"></i></span>` : '';
+
+  const plannedToggle = (!isRegistered(course.code)) ? `
+    <span class="planned-toggle ${plannedSet.has(course.code) ? 'active' : ''}" data-code="${course.code}" title="وضع كـ«مخطط له»">
+      <i class="bi bi-bookmark${plannedSet.has(course.code) ? '-fill' : ''}"></i>
+    </span>` : '';
+
+  return `
+    <div class="course-card planner-card ${stateClass}" style="--cat:${meta.color}" data-code="${course.code}" role="button" tabindex="0">
+      <div class="top-row">
+        <span class="code mono">${course.code}</span>
+        <span class="end-group">
+          ${plannedToggle}
+          <span class="term-badge">ف${term}</span>
+          <span class="credits mono">${course.credits} نقطة</span>
+        </span>
+      </div>
+      <div class="name">${course.name}</div>
+      <div class="d-flex flex-wrap gap-1 mt-2">${statusBadge}${lockBadge}</div>
+    </div>`;
+}
+
+function bindCourseCardClicks(){
+  document.querySelectorAll('.course-card[data-code]').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.planned-toggle')) return;
+      openCourseModal(card.dataset.code);
+    });
+    card.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.planned-toggle')){
+        e.preventDefault(); openCourseModal(card.dataset.code);
+      }
+    });
+  });
+  document.querySelectorAll('.planned-toggle').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const code = el.dataset.code;
+      if (plannedSet.has(code)) plannedSet.delete(code); else plannedSet.add(code);
+      savePlannedLocal();
+      render();
+    });
+  });
+}
+
+function renderStats(visible){
+  const earned = earnedCredits();
+  const remaining = Math.max(0, GRAD_TOTAL_CREDITS - earned);
+  const pct = Math.min(100, Math.round((earned / GRAD_TOTAL_CREDITS) * 100));
+  const gpa = computeGpa();
+  const gpaText = gpa.avg !== null ? gpa.avg.toFixed(1) : '—';
+  const failedCount = COURSES.filter(c => effectiveStatus(c.code) === 'failed').length;
+  const nextThreshold = CREDIT_THRESHOLDS.find(t => t.min > earned);
+  const nextYearLine = nextThreshold
+    ? `<div class="mb-1" style="color:var(--text-1);font-weight:700">${nextThreshold.min - earned} نقطة متبقية للسنة ${nextThreshold.year}</div>`
+    : '';
+
+  statsRow.innerHTML = `
+    <div class="col-6 col-lg-3">
+      <div class="stat-card"><div class="num mono">${earned}</div><div class="label">نقطة معتمدة مكتسبة</div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        ${nextYearLine}
+        <div class="num mono">${remaining}</div><div class="label">نقطة متبقية للتخرج (من ${GRAD_TOTAL_CREDITS})</div>
+        <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card"><div class="num mono">${gpaText}</div><div class="label">المعدل التراكمي (من 100)</div></div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card"><div class="num mono" style="color:${failedCount ? '#F16A6A' : 'var(--accent)'}">${failedCount}</div><div class="label">مقرر راسب حاليًا (لم يُعَد بعد)</div></div>
+    </div>
+  `;
+}
+
+function renderGpaSummary(){
+  const wrap = document.getElementById('gpaSummaryWrap');
+  const passedList = COURSES.filter(c => hasPassed(c.code));
+  if (!passedList.length){
+    wrap.innerHTML = `<div class="chain-panel-empty">لا توجد مقررات ناجحة مسجَّلة بعد.</div>`;
+    return;
+  }
+  wrap.innerHTML = `
+    <div class="table-responsive">
+      <table class="table table-sm" style="color:var(--text-1)">
+        <thead><tr style="color:var(--text-2)"><th>المقرر</th><th>النقاط</th><th>العلامة</th><th></th></tr></thead>
+        <tbody>
+          ${passedList.map(c => {
+            const pa = passedAttempt(c.code);
+            const grade = (pa.coursework_grade!=null && pa.final_exam_grade!=null) ? `${fmtGrade(Number(pa.coursework_grade)+Number(pa.final_exam_grade))}/100` : '—';
+            return `<tr><td>${c.name}</td><td class="mono">${c.credits}</td><td class="mono">${grade}</td><td>${pa.is_locked ? '<i class="bi bi-lock-fill" style="color:var(--text-2)"></i>' : ''}</td></tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function registeredTermIds(){
+  const ids = new Set();
+  Object.values(attemptsByCourse).forEach(list => list.forEach(a => ids.add(a.term_id)));
+  return ids;
+}
+
+function renderSuspensionCountdown(){
+  const wrap = document.getElementById('suspensionCountdown');
+  if (!CLOUD_ENABLED || !currentUser){
+    wrap.innerHTML = `<div class="chain-panel-empty">سجّل الدخول لعرض هذا الحساب بناءً على فصولك المسجَّلة فعليًا.</div>`;
+    return;
+  }
+  const termCount = registeredTermIds().size;
+  if (!termCount){
+    wrap.innerHTML = `<div class="chain-panel-empty">لم يُسجَّل أي فصل بعد — استورد كشف علاماتك أعلاه أو سجّل مقررًا لعرض هذا الحساب.</div>`;
+    return;
+  }
+  const usedYears = termCount * 0.5;
+  const remainingYears = Math.max(0, SUSPENSION_YEARS - usedYears);
+  const years = Math.floor(remainingYears);
+  const halfYear = (remainingYears - years) >= 0.5;
+
+  let color = '#4CAF7D', warn = '';
+  if (remainingYears <= 1){ color = '#F16A6A'; warn = 'اقتربت من الحد الأقصى — خطّط لبقية مقرراتك بعناية فائقة.'; }
+  else if (remainingYears <= 2.5){ color = '#F4B740'; warn = 'الوقت المتبقي يقترب من النهاية — يُستحسن مراجعة خطتك.'; }
+
+  wrap.innerHTML = `
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <div class="num mono" style="font-size:1.8rem;color:${color}">${years}${halfYear ? '.5' : ''} سنة</div>
+      <div style="color:var(--text-2);font-size:.85rem">متبقٍ (سجّلت حتى الآن ${termCount} فصلًا = ${usedYears} سنة من أصل ${SUSPENSION_YEARS})</div>
+    </div>
+    ${remainingYears <= 0 ? `<div class="mt-2 alert alert-danger mb-0">تجاوزت الحد الأقصى لعدد الفصول المسموح بها. يرجى مراجعة الدائرة التعليمية.</div>`
+      : (warn ? `<div class="mt-2" style="color:${color};font-size:.85rem"><i class="bi bi-exclamation-triangle me-1"></i> ${warn}</div>` : '')}
+  `;
+}
+
+function renderListView(courses){
+  const rows = courses.map(c => {
+    const status = effectiveStatus(c.code);
+    const relevant = passedAttempt(c.code) || latestAttempt(c.code);
+    const termName = relevant ? ((academicTerms.find(t => t.id === relevant.term_id) || {}).name || '—') : '—';
+    const gradeText = (relevant && relevant.coursework_grade != null && relevant.final_exam_grade != null)
+      ? `${fmtGrade(Number(relevant.coursework_grade) + Number(relevant.final_exam_grade))}/100`
+      : '—';
+    const statusLabel = status ? STATUS_META[status].label : 'لم يُسجَّل بعد';
+    return `<tr>
+      <td class="mono">${c.code}</td>
+      <td>${c.name}</td>
+      <td>ف${displayTerm(c)}</td>
+      <td class="mono">${c.credits}</td>
+      <td>${termName}</td>
+      <td>${statusLabel}</td>
+      <td class="mono">${gradeText}</td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div class="info-card">
+      <h3 class="mb-3"><i class="bi bi-journal-text" style="color:var(--accent)"></i> السجل الأكاديمي</h3>
+      <div class="table-responsive">
+        <table class="table table-sm list-view-table">
+          <thead><tr><th>الرمز</th><th>المقرر</th><th>فصل الخطة</th><th>النقاط</th><th>الفصل الجامعي</th><th>الحالة</th><th>العلامة</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+/* ============================================================
+   نافذة تفاصيل المقرر — السجل، التسجيل، إدخال العلامات، الأرشفة
+   ============================================================ */
+function openCourseModal(code){
+  const course = COURSE_MAP[code];
+  if (!course) return;
+
+  document.getElementById('courseModalCode').textContent = code;
+  document.getElementById('courseModalTitle').textContent = course.name;
+  document.getElementById('courseModalFullLink').href = `course.html?code=${encodeURIComponent(code)}`;
+
+  const body = document.getElementById('courseModalBody');
+  if (!CLOUD_ENABLED){
+    body.innerHTML = `<div class="alert alert-warning mb-0">المزامنة السحابية غير مُفعَّلة على هذا الموقع بعد.</div>`;
+  } else if (!currentUser){
+    body.innerHTML = `<div class="alert alert-warning mb-0">سجّل الدخول من زر «الحساب» أعلاه لتسجيل حالتك وعلاماتك في هذا المقرر.</div>`;
+  } else {
+    body.innerHTML = renderCourseModalBody(course);
+    bindCourseModalEvents(course);
+    const completed = hasPassed(course.code) || courseAttempts(course.code).some(a => a.status === 'failed');
+    if (completed){
+      loadMyRank(course.code);
+      loadMyDifficultyVote(course.code);
+    }
+  }
+
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('courseModal')).show();
+}
+
+async function loadMyRank(courseCode){
+  const wrap = document.getElementById('myRankWrap');
+  if (!wrap) return;
+  const { data, error } = await sb.rpc('get_my_course_rank', { p_course_code: courseCode });
+  if (error || !data || !data.length){
+    wrap.innerHTML = `<div class="chain-panel-empty">تعذّر تحميل هذه البيانات حاليًا.</div>`;
+    return;
+  }
+  const r = data[0];
+  if (!r.enough_data){
+    wrap.innerHTML = `<div class="chain-panel-empty">لا تتوفر بيانات كافية بعد لهذا المقرر (يلزم 30 طالبًا على الأقل ممن خاضوه).</div>`;
+    return;
+  }
+  if (r.my_grade == null){
+    wrap.innerHTML = `<div class="chain-panel-empty">لم تنجح في هذا المقرر بعد — ستظهر مقارنتك هنا بعد النجاح.</div>`;
+    return;
+  }
+  wrap.innerHTML = `
+    <div class="row g-2">
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="num mono">#${r.rank_position}</div><div class="label">ترتيبك من ${r.total_passed} ناجح</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="num mono">${fmtGrade(r.percentile)}%</div><div class="label">أعلى من هذه النسبة من الطلاب</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="num mono">${r.same_grade_count}</div><div class="label">حصلوا على نفس علامتك بالضبط</div></div></div>
+      <div class="col-6 col-md-3"><div class="stat-card"><div class="num mono">${fmtGrade(r.highest_grade)} / ${fmtGrade(r.lowest_grade)}</div><div class="label">أعلى / أدنى علامة ناجحة</div></div></div>
+    </div>
+  `;
+}
+
+async function loadMyDifficultyVote(courseCode){
+  const wrap = document.getElementById('difficultyVoteWrap');
+  if (!wrap) return;
+  const { data } = await sb.from('course_difficulty_votes').select('rating')
+    .eq('user_id', currentUser.id).eq('course_code', courseCode).maybeSingle();
+  renderDifficultyStars(courseCode, data ? data.rating : null);
+}
+
+function renderDifficultyStars(courseCode, currentRating){
+  const wrap = document.getElementById('difficultyVoteWrap');
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <div class="d-flex align-items-center flex-wrap gap-1">
+      ${[1,2,3,4,5].map(n => `<i class="bi ${currentRating && n <= currentRating ? 'bi-star-fill' : 'bi-star'} diff-star" data-value="${n}" style="cursor:pointer;font-size:1.3rem;color:#F4B740"></i>`).join('')}
+      ${currentRating ? `<span class="ms-2" style="color:var(--text-2);font-size:.78rem">قيّمته بـ ${currentRating} نجوم — اضغط لتغييره</span>` : `<span class="ms-2" style="color:var(--text-2);font-size:.78rem">اضغط لتقييم صعوبته</span>`}
+    </div>
+  `;
+  wrap.querySelectorAll('.diff-star').forEach(star => {
+    star.addEventListener('click', async () => {
+      const rating = Number(star.dataset.value);
+      const { error } = await sb.from('course_difficulty_votes').upsert(
+        { user_id: currentUser.id, course_code: courseCode, rating },
+        { onConflict: 'user_id,course_code' }
+      );
+      if (error){ showToast('تعذّر حفظ التقييم: ' + error.message); return; }
+      renderDifficultyStars(courseCode, rating);
+      showToast('شكرًا لتقييمك!');
+    });
+  });
+}
+
+function renderCourseModalBody(course){
+  const attempts = courseAttempts(course.code).slice().sort((a,b) => termOrderOf(b.term_id) - termOrderOf(a.term_id));
+
+  const historyHtml = attempts.length ? `
+    <div class="mb-3">
+      <div class="chain-panel-label mb-2">السجل السابق</div>
+      <div class="attempt-history">
+        ${attempts.map(a => {
+          const termName = (academicTerms.find(t => t.id === a.term_id) || {}).name || '—';
+          const meta = STATUS_META[a.status];
+          const gradesText = (a.coursework_grade != null && a.final_exam_grade != null)
+            ? `أعمال ${fmtGrade(a.coursework_grade)}/30 + نهائي ${fmtGrade(a.final_exam_grade)}/70 = ${fmtGrade(Number(a.coursework_grade) + Number(a.final_exam_grade))}/100`
+            : 'لم تُدخَل العلامات بعد';
+          return `
+            <div class="attempt-row" style="--sc:${meta.color}">
+              <div>
+                <div class="fw-bold">${termName}</div>
+                <div style="font-size:.78rem;color:var(--text-2)">${gradesText}</div>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="status-pill" style="--sc:${meta.color}"><i class="bi ${meta.icon}"></i> ${meta.label}</span>
+                ${a.is_locked
+                  ? `<i class="bi bi-lock-fill" title="مؤرشف نهائيًا" style="color:var(--text-2)"></i>`
+                  : (a.status === 'passed' ? `<button class="btn btn-sm btn-outline-blueprint btn-archive" data-attempt-id="${a.id}">تثبيت نهائي</button>` : '')}
+              </div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>
+  ` : '';
+
+  const completed = hasPassed(course.code) || courseAttempts(course.code).some(a => a.status === 'failed');
+  const statsPlaceholder = completed ? `
+    <div class="mb-3">
+      <div class="chain-panel-label mb-2">مقارنتك مع بقية الطلاب</div>
+      <div id="myRankWrap"><div class="chain-panel-empty">جارٍ التحميل…</div></div>
+    </div>
+    <div class="mb-3">
+      <div class="chain-panel-label mb-2">قيّم صعوبة هذا المقرر</div>
+      <div id="difficultyVoteWrap"><div class="chain-panel-empty">جارٍ التحميل…</div></div>
+    </div>
+  ` : '';
+
+  const selTerm = academicTerms.find(t => t.id === selectedAcademicTermId);
+  const currentAttempt = selTerm ? attemptForTerm(course.code, selTerm.id) : null;
+  const eligible = isEligible(course);
+
+  let actionHtml;
+  if (!selTerm){
+    actionHtml = `<div class="chain-panel-empty">لا يوجد فصل جامعي محدَّد حاليًا في الأعلى.</div>`;
+  } else if (currentAttempt && currentAttempt.is_locked){
+    actionHtml = `<div class="chain-panel-empty">العلامة مؤرشفة ونهائية لهذا الفصل — لا يمكن تعديلها.</div>`;
+  } else if (currentAttempt){
+    actionHtml = `
+      <div class="chain-panel-label mb-2">علامات الفصل الحالي: ${selTerm.name}</div>
+      <div class="row g-2 align-items-end">
+        <div class="col-6">
+          <label class="small-label">علامة الأعمال (من 30)</label>
+          <input type="number" min="0" max="30" step="0.5" class="form-control form-control-sm" id="gradeCoursework" value="${fmtGrade(currentAttempt.coursework_grade)}">
+        </div>
+        <div class="col-6">
+          <label class="small-label">علامة الامتحان النهائي (من 70)</label>
+          <input type="number" min="0" max="70" step="0.5" class="form-control form-control-sm" id="gradeFinal" value="${fmtGrade(currentAttempt.final_exam_grade)}">
+        </div>
+      </div>
+      <button class="btn btn-sm btn-blueprint w-100 mt-2" id="btnSaveGrades" data-attempt-id="${currentAttempt.id}">
+        <i class="bi bi-save me-1"></i> حفظ العلامات
+      </button>
+      <button class="btn btn-sm w-100 mt-2" id="btnDeleteAttempt" data-attempt-id="${currentAttempt.id}" style="border:1px solid #F16A6A;color:#F16A6A;background:transparent">
+        إلغاء تسجيل هذا الفصل
+      </button>
+    `;
+  } else if (eligible){
+    actionHtml = `
+      <button class="btn btn-sm btn-blueprint w-100" id="btnRegisterTerm">
+        <i class="bi bi-plus-circle me-1"></i> تسجيل هذا المقرر في ${selTerm.name}
+      </button>`;
+  } else {
+    const missing = missingRequirements(course);
+    actionHtml = `<div class="missing-note"><i class="bi bi-lock-fill"></i> بانتظار: ${missing.join('، ') || 'غير معروف'}</div>`;
+  }
+
+  return historyHtml + statsPlaceholder + `<div class="detail-hero" style="--cat:var(--accent)">${actionHtml}</div>`;
+}
+
+function bindCourseModalEvents(course){
+  const btnRegister = document.getElementById('btnRegisterTerm');
+  if (btnRegister) btnRegister.addEventListener('click', async () => {
+    btnRegister.disabled = true;
+    const { error } = await sb.from('course_attempts').insert({
+      user_id: currentUser.id, course_code: course.code, term_id: selectedAcademicTermId,
+    });
+    if (error){ showToast('تعذّر التسجيل: ' + error.message); btnRegister.disabled = false; return; }
+    await loadAttempts();
+    openCourseModal(course.code);
+    render();
+    showToast('تم تسجيل المقرر لهذا الفصل');
+  });
+
+  const btnSave = document.getElementById('btnSaveGrades');
+  if (btnSave) btnSave.addEventListener('click', async () => {
+    const cw = document.getElementById('gradeCoursework').value;
+    const fx = document.getElementById('gradeFinal').value;
+    btnSave.disabled = true;
+    const { error } = await sb.from('course_attempts').update({
+      coursework_grade: cw === '' ? null : Number(cw),
+      final_exam_grade: fx === '' ? null : Number(fx),
+    }).eq('id', btnSave.dataset.attemptId);
+    if (error){ showToast('تعذّر الحفظ: ' + error.message); btnSave.disabled = false; return; }
+    await loadAttempts();
+    openCourseModal(course.code);
+    render();
+    showToast('تم حفظ العلامات');
+  });
+
+  const btnDelete = document.getElementById('btnDeleteAttempt');
+  if (btnDelete) btnDelete.addEventListener('click', async () => {
+    if (!confirm('هل تريد إلغاء تسجيل هذا المقرر لهذا الفصل؟ سيُحذف هذا السجل نهائيًا.')) return;
+    const { error } = await sb.from('course_attempts').delete().eq('id', btnDelete.dataset.attemptId);
+    if (error){ showToast('تعذّر الإلغاء: ' + error.message); return; }
+    await loadAttempts();
+    openCourseModal(course.code);
+    render();
+  });
+
+  document.querySelectorAll('.btn-archive').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('بعد التثبيت لن تتمكن من تعديل هذه العلامة نهائيًا مهما حدث. متابعة؟')) return;
+      const { error } = await sb.from('course_attempts').update({ is_locked: true }).eq('id', btn.dataset.attemptId);
+      if (error){ showToast('تعذّر التثبيت: ' + error.message); return; }
+      await loadAttempts();
+      openCourseModal(course.code);
+      render();
+      showToast('تم تثبيت العلامة نهائيًا');
+    });
+  });
+}
+
+/* ---------- مسار الوصول إلى هدف ---------- */
+document.getElementById('btnComputePath').addEventListener('click', () => {
+  const code = targetCourseSelect.value;
+  const target = COURSE_MAP[code];
+  if (!target) return;
+  const ancestors = Array.from(getAncestors(code));
+  let remaining = ancestors.filter(a => !hasPassed(a));
+  if (!hasPassed(code)) remaining.push(code);
+  remaining = Array.from(new Set(remaining)).sort((a,b) => (COURSE_MAP[a].term||0) - (COURSE_MAP[b].term||0));
+
+  if (!remaining.length){
+    pathResult.innerHTML = `<div class="alert alert-success mb-0">لقد أنجزت بالفعل «${target.name}» أو كل متطلباته!</div>`;
+    return;
+  }
+  pathResult.innerHTML = `
+    <div class="mb-2" style="color:var(--text-1)">يتبقى <strong style="color:var(--accent)">${remaining.length}</strong> مقرر للوصول إلى «<strong>${target.name}</strong>»:</div>
+    <ul class="rel-list">
+      ${remaining.map(code => {
+        const c = COURSE_MAP[code];
+        const st = effectiveStatus(code);
+        const stLabel = st ? STATUS_META[st].label : `الفصل ${TERM_LABELS[c.term]}`;
+        return `<a href="course.html?code=${encodeURIComponent(code)}" target="_blank" rel="noopener" style="--accent:${st ? STATUS_META[st].color : 'var(--accent)'}">
+            <span>${c.name}</span><span class="rel-code mono">${code} · ${stLabel}</span>
+          </a>`;
+      }).join('')}
+    </ul>`;
+});
+
+/* ---------- طباعة / عرض القائمة ---------- */
+document.getElementById('btnToggleListView').addEventListener('click', () => {
+  const showingCards = !sectionsWrap.classList.contains('d-none');
+  sectionsWrap.classList.toggle('d-none', showingCards);
+  listViewWrap.classList.toggle('d-none', !showingCards);
+  document.getElementById('btnToggleListView').innerHTML = showingCards
+    ? '<i class="bi bi-grid-3x3-gap me-1"></i> عرض كبطاقات'
+    : '<i class="bi bi-list-ul me-1"></i> عرض كسجل أكاديمي';
+});
+document.getElementById('btnPrint').addEventListener('click', () => {
+  sectionsWrap.classList.add('d-none');
+  listViewWrap.classList.remove('d-none');
+  setTimeout(() => window.print(), 100);
+});
+
+// ينظّف عيوب الفاصلة العائمة الثنائية (مثل 75.78999999999999) دون أي أثر
+// على القيمة الفعلية المخزَّنة أو المستخدَمة في الحسابات — تنسيق عرض فقط.
+function fmtGrade(n){
+  if (n === null || n === undefined || n === '') return '';
+  const rounded = parseFloat(Number(n).toFixed(2));
+  return String(rounded);
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+trackFilter.addEventListener('change', render);
+
+/* ---------- زر "ملخّص المعدل" يعكس حالته (مفتوح/مغلق) بصريًا ---------- */
+const gpaPanelEl = document.getElementById('gpaPanel');
+const btnGpaEl = document.getElementById('btnGpa');
+gpaPanelEl.addEventListener('shown.bs.collapse', () => {
+  btnGpaEl.classList.remove('btn-outline-blueprint');
+  btnGpaEl.classList.add('btn-blueprint');
+  btnGpaEl.setAttribute('aria-expanded', 'true');
+});
+gpaPanelEl.addEventListener('hidden.bs.collapse', () => {
+  btnGpaEl.classList.remove('btn-blueprint');
+  btnGpaEl.classList.add('btn-outline-blueprint');
+  btnGpaEl.setAttribute('aria-expanded', 'false');
+});
+
+/* ============================================================
+   استيراد كشف العلامات من الجامعة (svuis.svuonline.org)
+   الملف المُصدَّر بلاحقة .xls هو في الحقيقة جدول HTML (ترميز
+   windows-1256)، وليس ملف إكسل حقيقي — لذلك نحلّله مباشرة كمستند
+   HTML داخل المتصفح، دون الحاجة لأي مكتبة خارجية.
+   ============================================================ */
+
+// يحوّل رمز فصل جامعي مثل "F25" أو "S24" إلى رقم ترتيب حسابي ثابت،
+// بحيث يبقى ترتيب الفصول صحيحًا ومتّسقًا بين كل الطلاب دون الحاجة
+// لتخمين أسماء عربية. وفق البيانات الفعلية: F يأتي بعد S لنفس السنة.
+function computeTermOrderFromCode(code){
+  const m = code.match(/^([FS])(\d{2})$/i);
+  if (!m) return null;
+  const season = m[1].toUpperCase();
+  const yy = parseInt(m[2], 10);
+  return yy * 2 + (season === 'F' ? 1 : 0);
+}
+
+async function resolveOrCreateTerm(code){
+  const existing = academicTerms.find(t => t.name === code);
+  if (existing) return existing.id;
+  const order = computeTermOrderFromCode(code);
+  const fallbackOrder = academicTerms.length ? Math.max(...academicTerms.map(t => t.term_order)) + 1 : 1;
+  const { data, error } = await sb.from('terms').insert({
+    name: code,
+    term_order: order != null ? order : fallbackOrder,
+    is_current: false,
+  }).select().single();
+  if (error) throw error;
+  academicTerms.push(data);
+  return data.id;
+}
+
+function parseUniversityExport(htmlText){
+  const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+  const tables = Array.from(doc.querySelectorAll('table'));
+  const parsedRows = [];
+  let pendingTermCode = null;
+
+  tables.forEach(table => {
+    const firstRow = table.rows[0];
+    const firstCellText = firstRow && firstRow.cells[0] ? firstRow.cells[0].textContent.trim() : '';
+
+    // جدول رأس فصل: خليته الأولى رمز مثل F25 أو S24
+    if (/^[FS]\d{2}$/i.test(firstCellText)){
+      pendingTermCode = firstCellText.toUpperCase();
+      return;
+    }
+
+    // جدول نتائج مقررات: يحوي صفًا يذكر Course وCHR وTotal معًا
+    const isCourseTable = Array.from(table.rows).some(r => {
+      const t = r.textContent;
+      return t.includes('Course') && t.includes('CHR') && t.includes('Total');
+    });
+    if (!isCourseTable || !pendingTermCode) return;
+
+    Array.from(table.rows).forEach(row => {
+      const cells = Array.from(row.cells).map(c => c.textContent.trim());
+      if (cells.length < 12) return;
+      const status = cells[0];
+      // نتجاهل أي رمز غير P/F/R/E (مثل N الخاص باختبار تحديد المستوى — لا يؤثر على المعدل ولا نتتبعه)
+      if (!['P', 'F', 'R', 'E'].includes(status)) return;
+      const m = cells[1].match(/\[([A-Za-z0-9]+)\]\s*$/);
+      if (!m) return;
+      const code = m[1];
+      if (!COURSE_MAP[code]) return; // رمز غير موجود في مخططنا (مثل PT) — يُتجاهل بأمان
+      const e1 = cells[4], f = cells[10];
+      parsedRows.push({
+        code,
+        termCode: pendingTermCode,
+        status,
+        coursework: (e1 && e1 !== '-') ? parseFloat(e1) : null,
+        final: (f && f !== '-') ? parseFloat(f) : null,
+      });
+    });
+  });
+
+  return parsedRows;
+}
+
+document.getElementById('btnImport').addEventListener('click', async () => {
+  const importStatus = document.getElementById('importStatus');
+  if (!CLOUD_ENABLED || !currentUser){
+    importStatus.innerHTML = `<div class="alert alert-warning mb-0">سجّل الدخول أولاً لاستيراد بياناتك.</div>`;
+    return;
+  }
+  const fileInput = document.getElementById('importFileInput');
+  const file = fileInput.files[0];
+  if (!file){
+    importStatus.innerHTML = `<div class="alert alert-warning mb-0">اختر ملفًا أولاً.</div>`;
+    return;
+  }
+
+  const btn = document.getElementById('btnImport');
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> جارٍ التحليل…`;
+  importStatus.innerHTML = '';
+
+  try{
+    const htmlText = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('تعذّرت قراءة الملف'));
+      reader.readAsText(file, 'windows-1256');
+    });
+
+    const parsedRows = parseUniversityExport(htmlText);
+    if (!parsedRows.length){
+      importStatus.innerHTML = `<div class="alert alert-warning mb-0">لم يتم العثور على أي مقررات معروفة في هذا الملف. تأكد أنه الملف الصحيح المُصدَّر من svuis.svuonline.org.</div>`;
+      return;
+    }
+
+    // حلّ/إنشاء الفصول الجامعية الظاهرة في الملف
+    const uniqueTermCodes = Array.from(new Set(parsedRows.map(r => r.termCode)));
+    const termIdByCode = {};
+    for (const code of uniqueTermCodes){
+      termIdByCode[code] = await resolveOrCreateTerm(code);
+    }
+    renderAcademicTermSelect();
+
+    // تجهيز الدفعة النهائية، مع تخطي أي محاولة مؤرشفة (مثبَّتة) مسبقًا لحمايتها
+    let skippedLocked = 0;
+    const upsertRows = [];
+    parsedRows.forEach(r => {
+      const termId = termIdByCode[r.termCode];
+      const existing = attemptForTerm(r.code, termId);
+      if (existing && existing.is_locked){ skippedLocked++; return; }
+      const row = {
+        user_id: currentUser.id,
+        course_code: r.code,
+        term_id: termId,
+        coursework_grade: r.coursework,
+        final_exam_grade: r.final,
+      };
+      if (r.status === 'E') row.status = 'exempted';
+      upsertRows.push(row);
+    });
+
+    if (upsertRows.length){
+      const { error } = await sb.from('course_attempts')
+        .upsert(upsertRows, { onConflict: 'user_id,course_code,term_id' });
+      if (error) throw error;
+    }
+
+    await loadAttempts();
+    render();
+
+    importStatus.innerHTML = `<div class="alert alert-success mb-0">
+      تم استيراد ${upsertRows.length} سجلًا عبر ${uniqueTermCodes.length} فصلًا دراسيًا${skippedLocked ? `، وتم تجاوز ${skippedLocked} سجلًا مؤرشفًا مسبقًا للحفاظ عليه` : ''}.
+    </div>`;
+    showToast('تم الاستيراد بنجاح');
+    fileInput.value = '';
+  }catch(err){
+    console.error(err);
+    importStatus.innerHTML = `<div class="alert alert-danger mb-0">تعذّر الاستيراد: ${err.message || 'خطأ غير معروف'}</div>`;
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = `<i class="bi bi-cloud-upload me-1"></i> استيراد`;
+  }
+});
+
+/* ============================================================
+   المصادقة (تسجيل الدخول/حساب جديد)
+   ============================================================ */
+const authModalEl   = document.getElementById('authModal');
+const authGuestPanel= document.getElementById('authGuestPanel');
+const authUserPanel = document.getElementById('authUserPanel');
+const authForm      = document.getElementById('authForm');
+const authEmail     = document.getElementById('authEmail');
+const authPassword  = document.getElementById('authPassword');
+const authSubmitBtn = document.getElementById('authSubmitBtn');
+const authStatusEl  = document.getElementById('authStatus');
+const authModalTitle= document.getElementById('authModalTitle');
+const authUserEmail = document.getElementById('authUserEmail');
+const accountBtnLabel = document.getElementById('accountBtnLabel');
+let authMode = 'signin';
+
+if (!CLOUD_ENABLED){
+  document.getElementById('authNotConfigured').classList.remove('d-none');
+  document.getElementById('authNotConfigured').textContent = 'المزامنة السحابية لم تُفعَّل بعد على هذا الموقع.';
+  authSubmitBtn.disabled = true;
+  document.getElementById('cloudStatusNote').innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i> المزامنة السحابية غير مُفعَّلة — التسجيل والعلامات لن تُحفظ.';
+}
+
+function setAuthStatus(msg, isError){
+  authStatusEl.textContent = msg;
+  authStatusEl.style.color = isError ? '#F16A6A' : '#4CAF7D';
+}
+
+document.querySelectorAll('#authTabs .nav-link').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('#authTabs .nav-link').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    authMode = tab.dataset.tab;
+    authSubmitBtn.textContent = authMode === 'signin' ? 'تسجيل الدخول' : 'إنشاء الحساب';
+    authModalTitle.textContent = authMode === 'signin' ? 'تسجيل الدخول لمزامنة خطتك' : 'إنشاء حساب جديد';
+    setAuthStatus('', false);
+  });
+});
+
+authForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!CLOUD_ENABLED) return;
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
+
+  if (authMode === 'signup' && ALLOWED_EMAIL_DOMAIN && !email.toLowerCase().endsWith(ALLOWED_EMAIL_DOMAIN.toLowerCase())){
+    setAuthStatus(`التسجيل مقتصر على البريد الجامعي فقط (ينتهي بـ ${ALLOWED_EMAIL_DOMAIN})`, true);
+    return;
+  }
+
+  authSubmitBtn.disabled = true;
+  setAuthStatus('جارٍ التنفيذ…', false);
+  try{
+    if (authMode === 'signin'){
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      bootstrap.Modal.getOrCreateInstance(authModalEl).hide();
+    } else {
+      const { error } = await sb.auth.signUp({ email, password });
+      if (error) throw error;
+      setAuthStatus('تم إنشاء الحساب! إن كان تأكيد البريد مفعّلًا، تحقق من بريدك قبل تسجيل الدخول.', false);
+    }
+  }catch(err){
+    let msg = err.message || 'حدث خطأ غير متوقع';
+    if (/database error saving new user/i.test(msg)){
+      msg = ALLOWED_EMAIL_DOMAIN ? `تأكد أن بريدك ينتهي فعليًا بـ ${ALLOWED_EMAIL_DOMAIN}.` : 'تعذّر إنشاء الحساب.';
+    }
+    setAuthStatus(msg, true);
+  }finally{
+    authSubmitBtn.disabled = false;
+  }
+});
+
+document.getElementById('btnSignOut')?.addEventListener('click', async () => {
+  if (!CLOUD_ENABLED) return;
+  await sb.auth.signOut();
+  bootstrap.Modal.getOrCreateInstance(authModalEl).hide();
+});
+
+function updateAuthUI(){
+  if (currentUser){
+    authGuestPanel.classList.add('d-none');
+    authUserPanel.classList.remove('d-none');
+    authUserEmail.textContent = currentUser.email;
+    accountBtnLabel.textContent = currentUser.email;
+    document.getElementById('btnAccount').querySelector('i').className = 'bi bi-cloud-check me-1';
+    document.getElementById('cloudStatusNote').innerHTML = '<i class="bi bi-cloud-check me-1" style="color:#4CAF7D"></i> متصل — يُحفظ تسجيلك وعلاماتك تلقائيًا.';
+  } else {
+    authGuestPanel.classList.remove('d-none');
+    authUserPanel.classList.add('d-none');
+    accountBtnLabel.textContent = 'تسجيل الدخول';
+    document.getElementById('btnAccount').querySelector('i').className = 'bi bi-cloud me-1';
+    if (CLOUD_ENABLED) document.getElementById('cloudStatusNote').innerHTML = 'سجّل الدخول لتسجيل مقرراتك وإدخال علاماتك.';
+  }
+}
+
+async function initAuth(){
+  if (!CLOUD_ENABLED){ updateAuthUI(); return; }
+  const { data: { session } } = await sb.auth.getSession();
+  if (session){
+    currentUser = session.user;
+    await loadAttempts();
+    render();
+  }
+  updateAuthUI();
+
+  sb.auth.onAuthStateChange(async (event, session) => {
+    const wasLoggedIn = !!currentUser;
+    currentUser = session ? session.user : null;
+    updateAuthUI();
+    if (currentUser && !wasLoggedIn){
+      await loadAttempts();
+      render();
+      showToast(`مرحبًا! تم تسجيل الدخول كـ ${currentUser.email}`);
+    } else if (!currentUser && wasLoggedIn){
+      attemptsByCourse = {};
+      render();
+      showToast('تم تسجيل الخروج');
+    }
+  });
+}
+
+/* ---------- التحميل الأولي ---------- */
+(async function init(){
+  loadPlannedLocal();
+  await loadAcademicTerms();
+  render();
+  await initAuth();
+})();
+</script>
 </body>
 </html>
