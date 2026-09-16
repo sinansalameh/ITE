@@ -709,6 +709,7 @@ footer.site-footer{
 .planner-card.status-passed .name{ text-decoration: line-through; text-decoration-color: #4CAF7D88; }
 .planner-card.status-inprogress{ box-shadow: 0 0 0 2px #F4B74088; }
 .planner-card.status-failed{ box-shadow: 0 0 0 2px #F16A6A99; opacity:.8; }
+.planner-card.status-exempted{ box-shadow: 0 0 0 2px #8E44AD99; opacity:.75; }
 .planner-card.status-planned{ box-shadow: 0 0 0 2px #5C8DFF66; }
 .planner-card.status-eligible{ box-shadow: 0 0 0 2px #16A08599; }
 .planner-card.status-locked{ opacity:.55; filter: saturate(.6); }
