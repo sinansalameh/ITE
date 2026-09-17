@@ -265,8 +265,8 @@
 /* ============================================================
    الإعداد والاتصال بـ Supabase
    ============================================================ */
-const SUPABASE_URL = "https://eokvxgpqrwipernnpmpm.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVva3Z4Z3BxcndpcGVybm5wbXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyNDU2NjQsImV4cCI6MjEwNDgyMTY2NH0._jzqe0sHNLCEfQdkOEBKkq5jWxFFI4LLfhYEANRhzNM";
+const SUPABASE_URL = "REPLACE_WITH_SUPABASE_URL";
+const SUPABASE_ANON_KEY = "REPLACE_WITH_SUPABASE_ANON_KEY";
 const ALLOWED_EMAIL_DOMAIN = "@svuonline.org";
 
 const SUPABASE_CONFIGURED = !SUPABASE_URL.includes('REPLACE_WITH') && !SUPABASE_ANON_KEY.includes('REPLACE_WITH');
@@ -720,12 +720,17 @@ function openCourseModal(code){
 async function loadMyRank(courseCode){
   const wrap = document.getElementById('myRankWrap');
   if (!wrap) return;
-  const { data, error } = await sb.rpc('get_my_course_rank', { p_course_code: courseCode });
+  const [{ data, error }, statsRes] = await Promise.all([
+    sb.rpc('get_my_course_rank', { p_course_code: courseCode }),
+    sb.rpc('get_course_public_stats', { p_course_code: courseCode }),
+  ]);
   if (error || !data || !data.length){
     wrap.innerHTML = `<div class="chain-panel-empty">تعذّر تحميل هذه البيانات حاليًا.</div>`;
     return;
   }
   const r = data[0];
+  const avgGrade = (statsRes.data && statsRes.data[0]) ? statsRes.data[0].avg_grade : null;
+
   if (!r.enough_data){
     wrap.innerHTML = `<div class="chain-panel-empty">لا تتوفر بيانات كافية بعد لهذا المقرر (يلزم 30 طالبًا على الأقل ممن خاضوه).</div>`;
     return;
@@ -734,8 +739,32 @@ async function loadMyRank(courseCode){
     wrap.innerHTML = `<div class="chain-panel-empty">لم تنجح في هذا المقرر بعد — ستظهر مقارنتك هنا بعد النجاح.</div>`;
     return;
   }
+
+  // موضع كل علامة على المقياس بين الأدنى (يمين، بما أن الصفحة RTL) والأعلى (يسار)
+  const range = r.highest_grade - r.lowest_grade;
+  const posOf = (g) => range > 0 ? ((g - r.lowest_grade) / range) * 100 : 50;
+  const myPct = posOf(r.my_grade);
+  const avgPct = avgGrade != null ? posOf(avgGrade) : null;
+
   wrap.innerHTML = `
-    <div class="row g-2">
+    <div class="grade-gauge">
+      <div class="grade-gauge-track">
+        ${avgPct != null ? `
+          <div class="grade-gauge-marker gauge-avg" style="right:${avgPct}%">
+            <span class="gauge-tag">المتوسط ${fmtGrade(avgGrade)}</span>
+            <span class="gauge-tick"></span>
+          </div>` : ''}
+        <div class="grade-gauge-marker gauge-me" style="right:${myPct}%">
+          <span class="gauge-tag gauge-tag-me">أنت ${fmtGrade(r.my_grade)}</span>
+          <span class="gauge-tick"></span>
+        </div>
+      </div>
+      <div class="d-flex justify-content-between mt-1" style="font-size:.72rem;color:var(--text-2)">
+        <span>الأدنى: ${fmtGrade(r.lowest_grade)}</span>
+        <span>الأعلى: ${fmtGrade(r.highest_grade)}</span>
+      </div>
+    </div>
+    <div class="row g-2 mt-2">
       <div class="col-6 col-md-3"><div class="stat-card"><div class="num mono">#${r.rank_position}</div><div class="label">ترتيبك من ${r.total_passed} ناجح</div></div></div>
       <div class="col-6 col-md-3"><div class="stat-card"><div class="num mono">${fmtGrade(r.percentile)}%</div><div class="label">أعلى من هذه النسبة من الطلاب</div></div></div>
       <div class="col-6 col-md-3"><div class="stat-card"><div class="num mono">${r.same_grade_count}</div><div class="label">حصلوا على نفس علامتك بالضبط</div></div></div>
