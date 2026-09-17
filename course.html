@@ -235,8 +235,8 @@ if (!course){
    إحصائيات المقرر (عامة، مرئية للجميع دون تسجيل دخول) — عبر دالة
    Supabase آمنة تُرجع أرقامًا مجمّعة فقط، لا أي علامة فردية لأي طالب.
    ============================================================ */
-const SUPABASE_URL = "https://eokvxgpqrwipernnpmpm.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVva3Z4Z3BxcndpcGVybm5wbXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyNDU2NjQsImV4cCI6MjEwNDgyMTY2NH0._jzqe0sHNLCEfQdkOEBKkq5jWxFFI4LLfhYEANRhzNM";
+const SUPABASE_URL = "REPLACE_WITH_SUPABASE_URL";
+const SUPABASE_ANON_KEY = "REPLACE_WITH_SUPABASE_ANON_KEY";
 const SUPABASE_CONFIGURED = !SUPABASE_URL.includes('REPLACE_WITH') && !SUPABASE_ANON_KEY.includes('REPLACE_WITH');
 let sb = null;
 if (SUPABASE_CONFIGURED){
@@ -256,9 +256,16 @@ async function loadCourseStats(courseCode){
     wrap.innerHTML = `<div class="chain-panel-empty">الإحصائيات غير مُفعَّلة على هذا الموقع بعد.</div>`;
     return;
   }
-  const { data, error } = await sb.rpc('get_course_public_stats', { p_course_code: courseCode });
+  let data, error;
+  try{
+    ({ data, error } = await sb.rpc('get_course_public_stats', { p_course_code: courseCode }));
+  }catch(err){
+    console.error('استثناء غير متوقع أثناء تحميل الإحصائيات:', err);
+    wrap.innerHTML = `<div class="chain-panel-empty">تعذّر تحميل الإحصائيات حاليًا (خطأ: ${err.message || err}).</div>`;
+    return;
+  }
   if (error || !data || !data.length){
-    wrap.innerHTML = `<div class="chain-panel-empty">تعذّر تحميل الإحصائيات حاليًا.</div>`;
+    wrap.innerHTML = `<div class="chain-panel-empty">تعذّر تحميل الإحصائيات حاليًا${error ? ` (${error.message})` : ''}.</div>`;
     console.error(error);
     return;
   }
