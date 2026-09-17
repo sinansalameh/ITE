@@ -49,6 +49,21 @@ const code = params.get('code');
 const app = document.getElementById('app');
 const course = COURSE_MAP[code];
 
+/* ============================================================
+   إعداد الاتصال بـ Supabase — يجب أن يُنفَّذ هنا، قبل أي كود قد
+   يستدعي loadCourseStats لاحقًا في هذا الملف (وإلا يحدث خطأ
+   "Cannot access 'sb' before initialization" بسبب رفع تعريف الدالة
+   دون رفع تنفيذ متغيّراتها).
+   ============================================================ */
+const SUPABASE_URL = "REPLACE_WITH_SUPABASE_URL";
+const SUPABASE_ANON_KEY = "REPLACE_WITH_SUPABASE_ANON_KEY";
+const SUPABASE_CONFIGURED = !SUPABASE_URL.includes('REPLACE_WITH') && !SUPABASE_ANON_KEY.includes('REPLACE_WITH');
+let sb = null;
+if (SUPABASE_CONFIGURED){
+  try{ sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
+  catch(err){ console.error('تعذّر تفعيل الإحصائيات:', err); }
+}
+
 function trackBadge(id){
   const t = TRACKS.find(x => x.id === id);
   if (!t) return '';
@@ -235,14 +250,6 @@ if (!course){
    إحصائيات المقرر (عامة، مرئية للجميع دون تسجيل دخول) — عبر دالة
    Supabase آمنة تُرجع أرقامًا مجمّعة فقط، لا أي علامة فردية لأي طالب.
    ============================================================ */
-const SUPABASE_URL = "REPLACE_WITH_SUPABASE_URL";
-const SUPABASE_ANON_KEY = "REPLACE_WITH_SUPABASE_ANON_KEY";
-const SUPABASE_CONFIGURED = !SUPABASE_URL.includes('REPLACE_WITH') && !SUPABASE_ANON_KEY.includes('REPLACE_WITH');
-let sb = null;
-if (SUPABASE_CONFIGURED){
-  try{ sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
-  catch(err){ console.error('تعذّر تفعيل الإحصائيات:', err); }
-}
 
 function starsHTML(rating){
   if (rating == null) return '<span style="color:var(--text-2)">لا تقييمات بعد</span>';
