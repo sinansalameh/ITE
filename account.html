@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حسابي — ITE Masar</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.rtl.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="style.css">
+<!-- Cloudflare Web Analytics -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "962f3b8db7984cafaef966a976c47d83"}'></script>
+<!-- End Cloudflare Web Analytics -->
+</head>
+<body>
+
+<div class="toolbar" style="position:static">
+  <div class="container d-flex justify-content-between align-items-center">
+    <a href="planner.html" class="btn btn-outline-blueprint btn-sm">
+      <i class="bi bi-arrow-right me-1"></i> رجوع إلى المخطط الشخصي
+    </a>
+    <span class="pill"><i class="bi bi-person-circle me-1"></i> حسابي</span>
+  </div>
+</div>
+
+<header class="hero py-4">
+  <div class="container">
+    <div class="eyebrow">ITE Masar</div>
+    <h1 class="h2">إعدادات الحساب</h1>
+    <p class="lead">عدّل اسمك ومسارك، أو غيّر كلمة المرور الخاصة بحسابك.</p>
+  </div>
+</header>
+
+<main class="container py-4" style="max-width:640px">
+
+  <div id="notLoggedInWrap" class="info-card text-center d-none">
+    <i class="bi bi-lock" style="font-size:1.8rem;color:var(--accent)"></i>
+    <p class="mt-2 mb-3" style="color:var(--text-1)">سجّل الدخول أولاً للوصول إلى إعدادات حسابك.</p>
+    <a href="planner.html" class="btn btn-blueprint">اذهب لتسجيل الدخول</a>
+  </div>
+
+  <div id="accountWrap" class="d-none">
+
+    <div class="info-card mb-3">
+      <h3><i class="bi bi-envelope" style="color:var(--accent)"></i> البريد الإلكتروني</h3>
+      <p class="mono mb-0" id="accountEmail" style="color:var(--text-1)"></p>
+    </div>
+
+    <div class="info-card mb-3">
+      <h3><i class="bi bi-person-badge" style="color:var(--accent)"></i> الملف الشخصي</h3>
+      <form id="profileForm">
+        <div class="mb-3">
+          <label class="form-label">الاسم الكامل</label>
+          <input type="text" id="fullNameInput" class="form-control" placeholder="اختياري">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">المسار / التخصص</label>
+          <select id="trackInput" class="form-select">
+            <option value="">لم أحدد بعد</option>
+          </select>
+          <div class="form-text">
+            يُستخدم هذا لتحديد المسار تلقائيًا عند فتح المخطط الشخصي — يمكنك تغييره من هناك يدويًا في أي وقت أيضًا.
+          </div>
+        </div>
+        <button type="submit" id="btnSaveProfile" class="btn btn-blueprint">
+          <i class="bi bi-save me-1"></i> حفظ التغييرات
+        </button>
+        <div id="profileStatus" class="mt-2"></div>
+      </form>
+    </div>
+
+    <div class="info-card mb-3">
+      <h3><i class="bi bi-key" style="color:var(--accent)"></i> تغيير كلمة المرور</h3>
+      <form id="passwordForm">
+        <div class="mb-3">
+          <label class="form-label">كلمة المرور الجديدة</label>
+          <input type="password" id="newPasswordInput" class="form-control" minlength="6" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">تأكيد كلمة المرور الجديدة</label>
+          <input type="password" id="confirmPasswordInput" class="form-control" minlength="6" required>
+        </div>
+        <button type="submit" id="btnChangePassword" class="btn btn-blueprint">
+          <i class="bi bi-shield-lock me-1"></i> تحديث كلمة المرور
+        </button>
+        <div id="passwordStatus" class="mt-2"></div>
+      </form>
+    </div>
+
+    <div class="text-center">
+      <button id="btnSignOutAccount" class="btn btn-sm" style="border:1px solid #F16A6A;color:#F16A6A;background:transparent">
+        <i class="bi bi-box-arrow-right me-1"></i> تسجيل الخروج
+      </button>
+    </div>
+
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <span>مُعدّة اعتمادًا على قائمة المقررات الرسمية للبرنامج والنماذج الاسترشادية لكل مسار (svuonline.org).</span>
+  </div>
+</footer>
+
+<div id="toast" class="planner-toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="data.js"></script>
+<script>
+const SUPABASE_URL = "https://eokvxgpqrwipernnpmpm.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVva3Z4Z3BxcndpcGVybm5wbXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyNDU2NjQsImV4cCI6MjEwNDgyMTY2NH0._jzqe0sHNLCEfQdkOEBKkq5jWxFFI4LLfhYEANRhzNM";
+let sb = null;
+try{ sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
+catch(err){ console.error('تعذّر الاتصال بالخادم:', err); }
+
+let currentUser = null;
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+/* تعبئة قائمة المسارات — نفس بنية planner.html */
+const trackSelect = document.getElementById('trackInput');
+const trackGroups = {};
+TRACKS.forEach(t => { (trackGroups[t.group] ||= []).push(t); });
+Object.entries(trackGroups).forEach(([group, list]) => {
+  const og = document.createElement('optgroup');
+  og.label = group;
+  list.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    opt.textContent = t.label;
+    og.appendChild(opt);
+  });
+  trackSelect.appendChild(og);
+});
+
+async function loadAccount(){
+  if (!sb) return;
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session){
+    document.getElementById('notLoggedInWrap').classList.remove('d-none');
+    return;
+  }
+  currentUser = session.user;
+  document.getElementById('accountWrap').classList.remove('d-none');
+  document.getElementById('accountEmail').textContent = currentUser.email;
+
+  const { data, error } = await sb.from('profiles').select('full_name, track').eq('id', currentUser.id).maybeSingle();
+  if (!error && data){
+    document.getElementById('fullNameInput').value = data.full_name || '';
+    document.getElementById('trackInput').value = data.track || '';
+  }
+}
+
+document.getElementById('profileForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('btnSaveProfile');
+  const statusEl = document.getElementById('profileStatus');
+  const fullName = document.getElementById('fullNameInput').value.trim();
+  const track = document.getElementById('trackInput').value;
+
+  btn.disabled = true;
+  statusEl.innerHTML = '';
+  const { error } = await sb.from('profiles').update({
+    full_name: fullName || null,
+    track: track || null,
+  }).eq('id', currentUser.id);
+
+  if (error){
+    statusEl.innerHTML = `<div class="alert alert-danger mb-0">تعذّر الحفظ: ${error.message}</div>`;
+  } else {
+    statusEl.innerHTML = `<div class="alert alert-success mb-0">تم الحفظ بنجاح.</div>`;
+    showToast('تم تحديث ملفك الشخصي');
+  }
+  btn.disabled = false;
+});
+
+document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('btnChangePassword');
+  const statusEl = document.getElementById('passwordStatus');
+  const pw1 = document.getElementById('newPasswordInput').value;
+  const pw2 = document.getElementById('confirmPasswordInput').value;
+
+  if (pw1 !== pw2){
+    statusEl.innerHTML = `<div class="alert alert-warning mb-0">كلمتا المرور غير متطابقتين.</div>`;
+    return;
+  }
+
+  btn.disabled = true;
+  statusEl.innerHTML = '';
+  const { error } = await sb.auth.updateUser({ password: pw1 });
+
+  if (error){
+    statusEl.innerHTML = `<div class="alert alert-danger mb-0">تعذّر التحديث: ${error.message}</div>`;
+  } else {
+    statusEl.innerHTML = `<div class="alert alert-success mb-0">تم تحديث كلمة المرور بنجاح.</div>`;
+    showToast('تم تحديث كلمة المرور');
+    document.getElementById('passwordForm').reset();
+  }
+  btn.disabled = false;
+});
+
+document.getElementById('btnSignOutAccount').addEventListener('click', async () => {
+  await sb.auth.signOut();
+  location.href = 'planner.html';
+});
+
+loadAccount();
+</script>
+</body>
+</html>
